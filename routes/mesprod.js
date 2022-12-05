@@ -5,6 +5,7 @@ const { body } = require("express-validator");
 //Custom references
 const batchesController = require("../controllers/batches");
 const productController = require("../controllers/product");
+const equipmentController = require("../controllers/equipment");
 
 const router = express.Router();
 
@@ -13,6 +14,7 @@ const router = express.Router();
 let contadorMalas = 0;
 const productQueriesKeys = ["PRODUCTO"];
 const batchQueriesKeys = ["BATCH"];
+const eqpQueriesKeys = ["EQUIPO"];
 
 router.get(
   "/batchinfo",
@@ -46,9 +48,37 @@ router.get(
 
 router.get("/processplan", productController.getProcessPlans);
 
-router.get("/batchstep", batchesController.getBatchStep);
+router.get(
+  "/eqpattrib",
+  [
+    body()
+      .custom((body, { req }) => {
+        contadorMalas = 0;
 
-router.get("/batchdefects", batchesController.getBatchDefects);
+        Object.keys(req.body).forEach((element) => {
+          if (
+            !Object.keys(req.body[element]).every((key) => {
+              return eqpQueriesKeys.includes(key);
+            })
+          ) {
+            contadorMalas++;
+          }
+        });
+
+        if (contadorMalas > 0) {
+          return false;
+        } else {
+          return true;
+        }
+      })
+      .withMessage(
+        "Se ha omitido, o se ha agregado de más, un parámetro en el cuerpo de la petición"
+      ),
+  ],
+  equipmentController.getEquipmentAttributes
+);
+
+//router.get("/batchdefects", batchesController.getBatchDefects);
 
 router.get(
   "/productattrib",

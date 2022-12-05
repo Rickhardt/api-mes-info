@@ -14,7 +14,7 @@ Currently (04/12/2022) this API can handle request for information about:
 - Process Plans, and
 - Machines.
 
-this was done taking into account was is often requested from users (for example, for batches new part type and old part type are always requested in a query); some took into account that the information is not so simple to extract from the database and could be of great use (for example, the attributes of equipments). More request could be added if it seems worthy, but queries that used for specific applications and seem to be of no use for the general public (i.e. that are only used in one and one application only and other users see them as meaningless) must be done by each developer.
+this was done taking into account was is often requested from users (for example, for batches new part type and old part type are always requested in a query); some took into account that the information is not so simple to extract from the database and could be of great use (for example, the attributes of equipments). More request could be added if it seems worthy, but queries that are used for specific applications and seem to be of no use for the general public (i.e. that are only used in one and one application only and other users see them as meaningless) must be done by each developer individually.
 
 ## General information about the API
 
@@ -55,3 +55,9 @@ Information from batches can be return from either from MES or REPMES databases.
 
 - productattrib (for MES only):
     - returns attributes assign to a product. These are irrespective of the batch or step and are the standard, out-of-the-box attributes assing by Engineering; for batch attributes the batchattrib method would be prefered. The informtation returned is current version, person who created or modified the current version, the name of the attribute and its magnitude. Multiples products can be sent to this method.
+
+
+### Equipment
+
+- eqpattrib (for MES only):
+    - returns attributes assign to equipments; also, who created or modified the current version of the equipment, the description, the current batch loaded into it, the current state (e.g. IDLE), current capacity, user that interacted with it and the step it is assign to. Multiple equipments can be query at the same time.
