@@ -1,0 +1,203 @@
+<%- include('../includes/header.ejs') %>
+    <h2 class="fw-bolder mt-3">Información de API de extracción de datos de MES y REPMES</h2>
+
+    <div class="container">
+        <p>La API extrae datos de MES y REPMES esto puede verse en la ruta, por ejemplo:
+                <pre class="d-flex justify-content-center fw-bolder fs-5 text">http://server-name:port/repmes/batchinfo</pre>
+           ejecuta las sentencias SQL a la base de datos REPSALPROD. Ciertos métodos existen tanto para la base de datos
+           de producción como la de reportería; tome en cuenta que la información podría no ser la misma o que 
+           podría tener agregados más datos.
+        </p>
+
+        <hr>
+        <h4 class="fw-bolder">Tipos de consulta.</h4>
+
+        <p>La API tiene varios métodos para diverso tipo de consulta; dependiendo del objeto, estas se pueden agrupar de la siguiente forma:
+            <ul>
+                <li class="fw-bolder">Métodos que extraen información de REPMES.</li>
+                <ul>
+                    <div class="container">
+                        <li><a href="/api-info-lotes">Lotes</a></li>
+                        <ul><li><a href="/api-info-lotes#batchinfo">Información de batch</a></li></ul>
+                        <ul><li><a href="/api-info-lotes#batchattrib">Atributos de batch</a></li></ul>
+                        <ul><li><a href="/api-info-lotes#batchstep">Procesos realizados a un batch</a></li></ul>
+                        <ul><li><a href="/api-info-lotes#batchdefects">Rendimiento de un batch</a></li></ul>
+                        <ul><li><a href="/api-info-lotes#batchtestresults">Pruebas realizadas a un batch</a></li></ul>
+                    </div>
+                </ul>
+                <li class="fw-bolder">Métodos que extraen información de MESPROD.</li>
+                <ul>
+                    <div class="container">
+                        <div class="container">
+                            <li><a href="/api-info-lotes">Lotes</a></li>
+                            <ul><li><a href="/api-info-lotes#batchinfomes">Información de batch</a></li></ul>
+                        </div>
+                        <li>Productos.</li>
+                        <li>Equipo.</li>
+                    </div>
+                </ul>
+                <li class="fw-bolder">Otros métodos.</li>
+            </ul>
+        </p>
+
+        <hr>
+        <h4 class="fw-bolder">Tipos de peticiones actualmente soportadas.</h4>
+        <p> Por el momento solo se pueden realizar peticiones GET. De ser necesario se agregaran otros "verbos" para ser aceptados.</p>
+
+        <hr>
+        <h4 class="fw-bolder">Uso de la API.</h4>
+        <p>Todas las peticiones deben enviarse con cuerpo (body) y este debe ser un JSON. Un JSON o JavaScript Object Notation es un formato
+           de texto que consta de pares de indices y valores a veces llamados pares llave-valor; todas las llaves y valores debe ir dentro
+           de doble comilla ("). La forma de un JSON es como la siguiente:
+
+            <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                {
+                    "0" :
+                        {
+                            "BATCH" : "A47N203P"
+                        },
+                
+                    "1" :
+                        {
+                            "BATCH" : "A47N228P"
+                        },
+                
+                    "2" :
+                        {
+                            "BATCH" : "A47N2EAP"
+                        },
+                
+                    "3" :
+                        {
+                            "BATCH" : "A48N0K1P"
+                        },
+                
+                    "4" :
+                        {
+                            "BATCH" : "A46N1HDP"
+                        },
+                
+                    "5" :
+                        {
+                            "BATCH" : "A46N28PP"
+                        },
+                
+                    "6" :
+                        {
+                            "BATCH" : "A34N284P"
+                        }
+                }
+            </pre>
+        </p>
+        <p class="d-flex justify-content-center fw-bolder text" style="font-size: 10px;">Ejemplo de un JSON. Note que solo se utilizan llaves y los valores están dentro de comillas dobles</p><br>
+
+        <p>Observe que los pares llave-valor están dentro de llave, no corchetes. Para más información sobre JSON visite este
+           <a href="https://www.json.org/json-en.html">sitio</a>.<br><br>
+
+           Para propósitos explicativos vamos a nombrar las llaves numéricas del ejemplo anterior (estas son, 1, 2, 3, etc.) como
+           <i>llaves externas</i>; las llaves de los pares internos las nombraremos como <i>llaves internas</i>. La API acepta llaves
+           externas numéricas, solo caracteres o alfanuméricas. Las llaves internas son mandatorias en sus nombres, los nombres exactos
+           se mencionan en la descripción de cada uno de los métodos.
+        </p>
+
+        <p>Además de lo anterior, en la petición debe agregársele una cabecera para indicarle que lo enviado en el cuerpo es un JSON,
+           esto para asegurar que no lo envíe como texto plano sino como el formato que se quiere. Por ejemplo, en PHP esto se haría
+           de la siguiente manera:
+
+            <div class="d-flex justify-content-center">
+                <img src="img/peticion-GET-en-PHP.png" alt="" width="60%">
+            </div>
+        </p>
+        <p class="d-flex justify-content-center fw-bolder text" style="font-size: 10px;">Ejemplo de como se haría una petición GET en PHP usando la función file_get_contents auxilida de una función stream.</p><br>
+
+        <p>
+            <div class="d-flex justify-content-center">
+                <img src="img/peticion-POST-en-JS.png" alt="" width="45%">
+            </div><br>
+            <p class="d-flex justify-content-center fw-bolder text" style="font-size: 10px;">Ejemplo de como se haría una petición POST en JavaScript. Este lenguaje no admite cuerpo (o body) en las peticiones como sí lo hace PHP</p><br>
+        </p>
+
+        <p>Una nota acerca de realizar peticiones usando JavaScript. Pueden realizarse peticiones ya sea utilizando AJAX o la función nativa fetch, sin embargo,
+           es importante saber que las peticiones GET en JavaScript no admiten cuerpo si se intenta enviar una petición GET retornará un error, por lo que el
+           método siempre debe ser POST si se está usando este lenguaje.
+        </p>
+
+        <p>Lo anterior es solo un ejemplo de su uso, la API puede ser consumida por cualquier medio que pueda enviar JSON y procesarlo por
+            lo que la limitante únicamente es el ingenio de cada programador (y por supuesto las limitantes del lenguaje/dispositivo utilizado).
+
+            Luego que la lógica haya procesado la petición, se envía una respuesta. Independientemente del resultado (información u error)
+            la respuesta será un JSON. A continuación se muestra como se vería una respuesta a una petición exitosa:
+
+            <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                [
+                    {
+                        "BATCH": "A47N203P",
+                        "BATCH_CATEGORY1": "TA",
+                        "BATCH_CATEGORY2": "STD",
+                        "ACTIVE": "Y",
+                        "START_QTY": 39625,
+                        "END_QTY": null,
+                        "MATERIAL": "TA",
+                        "PART_TYPE": "TVA107M1JRKJFDX",
+                        "PART_CLASS": "TV",
+                        "CASE_SIZE": "A",
+                        "CAPACITANCE": 100,
+                        "VOLTAGE": 6.3,
+                        "DESIGN": 35152,
+                        "BATCH_STATUS": "NO_CAPM",
+                        "CAPM_LAST_UPDATED": "2022-11-23T19:29:13.000Z",
+                        "PRIORITY": 999,
+                        "MES_STATUS": "Active",
+                        "MES_QTY": 37574,
+                        "CURR_STEP_NAME": "S_ASO_BurnTest_LF",
+                        "CURR_HANDLE": "BurnTest",
+                        "MES_LAST_UPDATED": "2022-12-03T21:02:05.000Z",
+                        "SUBASSEMBLY_PART_TYPE": "RVA107M1JAGSNN",
+                        "OLD_PART_TYPE": "TLJA100M6R3RKJ",
+                        "OLD_SUBASS_PART_TYPE": null
+                    },
+                    {
+                        "MENSAJE": "Información del estado del lote hasta el último TrackOut."
+                    }
+                ]
+            </pre>
+        </p>
+        <p class="d-flex justify-content-center fw-bolder text" style="font-size: 10px;">Ejemplo de respuesta a una petición. Noté que esta vez el JSON está dentro de corchetes</p><br>
+
+        <p>Lo primero que salta a la vista es que este JSON está dentro de corchetes (a diferencia del JSON enviado en el cuerpo de la petición)
+            esto se debe a que, en caso de que la consulta retorne más de 1 fila, cada registro de la base de datos se tomara como un objeto diferente
+            lo que significa que será un array de JSON. Esto puede ser fácilmente recorrido con un bucle, o decodificado para convertirse en un elemento
+            propio de cada lenguaje, toda vez que este tenga la función necesaria para hacerlo, como la función nativa de PHP
+            <pre class="fw-bolder">json_decode($json_to_decode)</pre>
+        </p>
+
+        <p>La respuesta también tiene un mensaje informando sobre el tipo de información que se retorna (llave <i>MENSAJE</i> en el ejemplo anterior).
+           Si por alguna razón no se encontró información, es decir, no existen registros en la base de datos, la respuesta será únicamente 
+           el par llave-valor <i>MENSAJE</i>. En caso de existir un error en alguno de los valores, la cantidad de pares llave-valor y del objeto enviado
+           la respuesta retornada será un mensaje aludiendo el tipo de error, y la porción del JSON con el error, si el error fue en la base de datos
+           se mostrará el código de error de Oracle y la descripción del mismo. A continuación se muestra un ejemplo de una petición que retorna un error:
+
+            <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                {
+                    "ERRORES": [
+                        {
+                            "value": {
+                                "0": {
+                                    "BATCH": "A47N203P/"
+                                }
+                            },
+                            "msg": "Algunos de los miembros del cuerpo de la petición posee caracteres no válidos",
+                            "param": "",
+                            "location": "body"
+                        }
+                    ]
+                }
+            </pre>
+        </p>
+        <p class="d-flex justify-content-center fw-bolder text" style="font-size: 10px;">Ejemplo del mensaje en la respuesta de una petición que retorna un error.</p><br>
+
+        <p>Por último, es importante mencionar, que todas las respuestas, sean estas errores o respuestas exitosas, retornan un código de
+           estado (o <i>status code</i>) dependiendo del tipo de error encontrado, esto para ayudar en la depuracón de errores ya que esto marca
+           de color rojo el nombre de la petición en la consola facilitando el saber que hay un error.
+        </p><br><br>
+<%- include('../includes/end.ejs') %>

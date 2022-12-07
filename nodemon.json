@@ -1,0 +1,8 @@
+{
+    "env":{
+        "DATABASE_DEFAULT_HOST":"10.0.51.191",
+        "DATABASE":"credentials",
+        "DATABASE_USER":"Ricardo_T",
+        "DATABASE_PASSWORD":"tegodesing"
+    }
+}

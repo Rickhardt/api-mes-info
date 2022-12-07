@@ -42,11 +42,63 @@ router.get(
       .withMessage(
         "Se ha omitido, o se ha agregado de más, un parámetro en el cuerpo de la petición"
       ),
+
+    body()
+      .custom((body, { req }) => {
+        let specialCharactersRegEx = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?']/;
+
+        contadorMalas = 0;
+
+        Object.keys(req.body).forEach((element) => {
+          if (
+            req.body[element]["BATCH"].match(specialCharactersRegEx) != null
+          ) {
+            contadorMalas++;
+          }
+        });
+
+        if (contadorMalas > 0) {
+          return false;
+        } else {
+          return true;
+        }
+      })
+      .withMessage(
+        "Algunos de los miembros del cuerpo de la petición posee caracteres no válidos"
+      ),
   ],
   batchesController.getBatchActualPosition
 );
 
-router.get("/processplan", productController.getProcessPlans);
+router.get(
+  "/processplan",
+  [
+    body()
+      .custom((body, { req }) => {
+        let specialCharactersRegEx = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?']/;
+
+        contadorMalas = 0;
+
+        Object.keys(req.body).forEach((element) => {
+          if (
+            req.body[element]["PRODUCTO"].match(specialCharactersRegEx) != null
+          ) {
+            contadorMalas++;
+          }
+        });
+
+        if (contadorMalas > 0) {
+          return false;
+        } else {
+          return true;
+        }
+      })
+      .withMessage(
+        "Algunos de los miembros del cuerpo de la petición posee caracteres no válidos"
+      ),
+  ],
+  productController.getProcessPlans
+);
 
 router.get(
   "/eqpattrib",
@@ -74,11 +126,33 @@ router.get(
       .withMessage(
         "Se ha omitido, o se ha agregado de más, un parámetro en el cuerpo de la petición"
       ),
+
+    body()
+      .custom((body, { req }) => {
+        let specialCharactersRegEx = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?']/;
+
+        contadorMalas = 0;
+
+        Object.keys(req.body).forEach((element) => {
+          if (
+            req.body[element]["EQUIPO"].match(specialCharactersRegEx) != null
+          ) {
+            contadorMalas++;
+          }
+        });
+
+        if (contadorMalas > 0) {
+          return false;
+        } else {
+          return true;
+        }
+      })
+      .withMessage(
+        "Algunos de los miembros del cuerpo de la petición posee caracteres no válidos"
+      ),
   ],
   equipmentController.getEquipmentAttributes
 );
-
-//router.get("/batchdefects", batchesController.getBatchDefects);
 
 router.get(
   "/productattrib",
@@ -127,6 +201,30 @@ router.get(
       })
       .withMessage(
         "Se ha omitido, o se ha agregado de más, un parámetro en el cuerpo de la petición"
+      ),
+
+    body()
+      .custom((body, { req }) => {
+        let specialCharactersRegEx = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?']/;
+
+        contadorMalas = 0;
+
+        Object.keys(req.body).forEach((element) => {
+          if (
+            req.body[element]["PRODUCTO"].match(specialCharactersRegEx) != null
+          ) {
+            contadorMalas++;
+          }
+        });
+
+        if (contadorMalas > 0) {
+          return false;
+        } else {
+          return true;
+        }
+      })
+      .withMessage(
+        "Algunos de los miembros del cuerpo de la petición posee caracteres no válidos"
       ),
   ],
   productController.getProductAttributes

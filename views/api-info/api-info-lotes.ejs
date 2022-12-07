@@ -1,0 +1,205 @@
+<%- include('../includes/header.ejs') %>
+    <h2 class="fw-bolder mt-3">Métodos que utilizan lotes como parámetro.</h2>
+
+    <h4 class="fw-bolder mt-3">Información general.</h4>
+
+    <div class="container">
+        <p>Los métodos para lotes solo un valor dentro del par llave-valor (o también conocido como par nombre-valor). El nombre de la llave 
+           DEBE ser <i>BATCH</i>, se muestra un ejemplo:
+
+           <div class="row">
+                <div class="col-md-11">
+                    <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                        {
+                            "BATCH" : "A47N203P"
+                        }
+                    </pre>
+                </div>
+
+                <div class="col-md-1 align-self-center">
+                        <p class="fw-bolder fs-5 text">1</p>
+                </div>
+           </div>
+
+           Cualquier otro tipo de elemento va a retornar un error. Ejemplos de elementos erróneamente formados son:
+
+           <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                {
+                    "BATCH" : "A47N203P",
+                    "KEY_2" : "SOME-BATCH"
+                }
+           </pre>
+
+           <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                {
+                    "BATCH" : "A47N203P",
+                    "KEY_2" : "SOME-BATCH",
+                            .
+                            .
+                            .
+                    "KEY_N" : "N-BATCH"        
+                }
+           </pre>
+
+           <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                {
+                    "LOTE" : "A47N203P"       
+                }
+           </pre>
+
+           <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                {
+                    "SOME-OTHER-NAME" : "SOME-VALID-BATCH-NUMBER"       
+                }
+           </pre>
+        </p>
+
+        <p>En general, cualquier otro caso diferente a <i class="fw-bolder">1</i> va a responder con un error.</p>
+
+        <h4 class="fw-bolder mt-3">Métodos.</h4>
+
+        <div id="batchinfomes" name="batchinfomes">
+            <h5 class="fw-bolder mt-3"><ul><li>batchinfo (REPMES).</li></ul></h5>
+
+            <p>Este método retorna la misma información que el cliente de Factory, esto es para conocer el estado de un lote
+               con la información más actualizada que se puede tener. Entre la información retornada está:
+    
+               <ul>
+                <li>Estado (Active, por ejemplo).</li>
+                <li>Número de parte nuevo.</li>
+                <li>Número de parte viejo.</li>
+                <li>Process Plan asignado al producto.</li>
+                <li>Cantidad de piezas.</li>
+                <li>Lote del semifinished.</li>
+                <li>Número de parte del semifinished.</li>
+                <li>Paso.</li>
+                <li>Handle.</li>
+                <li>Máquina o equipo en el que se está procesando.</li>
+                <li>Regla a ser (o siendo) ejecutada.</li>
+                <li>Tiempo desde que ingreso al paso.</li>
+               </ul>
+    
+               Este método acepta uno o más lotes.
+            </p>
+        </div>
+        <hr>
+
+        <div id="batchinfo" name="batchinfo">
+            <h5 class="fw-bolder mt-3"><ul><li>batchinfo (MESPROD).</li></ul></h5>
+
+            <p>Este método busca la información del estado del lote hasta el último TrackOut, está es información general y es como un snapshot
+               de la posición actual del lote. Entre los datos que retorna están:
+    
+               <ul>
+                <li>Número de parte nuevo.</li>
+                <li>Número de parte viejo.</li>
+                <li>Último paso en el que fue procesado.</li>
+                <li>Handle del último paso en el fue procesado.</li>
+                <li>Estado (Active, por ejemplo).</li>
+                <li>Cantidad de piezas.</li>
+                <li>Tamaño de case.</li>
+                <li>Capacitancia.</li>
+                <li>Voltaje.</li>
+                <li>Número de parte del semifinished.</li>
+               </ul>
+    
+               Este método acepta uno o más lotes.
+            </p>
+        </div>
+        <hr>
+
+        <div id="batchattrib" name="batchattrib">
+            <h5 class="fw-bolder mt-3"><ul><li>batchattrib.</li></ul></h5>
+
+            <p>Este método busca los valores de todos los atributos asignados a un lote hasta el último TrackOut.
+                Entre los datos que retorna están:
+    
+               <ul>
+                <li>Atributo.</li>
+                <li>Valor del atributo.</li>
+                <li>Fecha cuando fue asignado o modificado.</li>
+                <li>Paso en el que fue modificado.</li>
+                <li>Handle en el que fue modificado o asignado.</li>
+                <li>Handle.</li>
+               </ul>
+    
+               Debido a la naturaleza de REPMES existe la posibilidad de que algún atributo no se almacene en esta base; en ese caso,
+               comuníquese con el grupo de MES para solicitar que se agregue. Recuerde que eso se solicita a Checa.
+    
+               Este método acepta uno o más lotes. 
+            </p>
+        </div>
+        <hr>
+
+        <div id="batchstep" name="batchstep">
+            <h5 class="fw-bolder mt-3"><ul><li>batchstep.</li></ul></h5>
+
+            <p>Este método retorna un historial de todos los procesos que ha tenido un lote hasta el último TrackOut.
+               Entre los datos que retorna están:
+    
+               <ul>
+                <li>Turno.</li>
+                <li>Operador.</li>
+                <li>Cantidad de piezas en cada paso.</li>
+                <li>Equipo en el que se procesó.</li>
+                <li>Handle.</li>
+                <li>Cantidad de scrap.</li>
+                <li>Tiempo de manejo (handling time).</li>
+               </ul>
+    
+               Este método acepta uno o más lotes.
+            </p>
+        </div>
+        <hr>
+
+        <div id="batchdefects" name="batchdefects">
+            <h5 class="fw-bolder mt-3"><ul><li>batchdefects.</li></ul></h5>
+
+            <p>Este método retorna el comportamiento del lote en cuando a yield a lo largo del proceso. Entre los datos que retorna están:
+    
+               <ul>
+                <li>Unidades buenas del paso.</li>
+                <li>Cantidad de scrap del paso.</li>
+                <li>Cantidad de unidades utilizadas para pruebas (si existe).</li>
+                <li>Operadora.</li>
+                <li>Turno.</li>
+                <li>Remanente.</li>
+               </ul>
+    
+               El remanente es una cantidad que aparece únicamente en la planta de Ensamble, puesto que para las otras dos plantas
+               el movimiento de unidades es líquido, es decir, el total de unidades que terminan como Good Units en Packing de proceso químico
+               (por ejemplo), es la cantidad que va a moverse a Ensamble. Sin embargo, en la planta de Ensamble existe una operación de
+               <i>ajuste de cantidad</i> (que se da en el paso de Complete) en la que a los lotes se les quita unidades para poder enviar carretes estándar a los clientes.
+    
+               Un ejemplo de esto sería el siguiente; existe un lote cuyo producto es TAJB22K16RLB con 123456 unidades buenas luego del proceso de
+               revisión visual. "<i>R</i>" en este caso es el tamaño del carrete, para el case B son 2000, por lo tanto, para obtener la cantidad de
+               más cercana de carretes estándar el módulo de la operación 123456%2000 debe ser igual a cero. Entonces, al paso de CompleteScan se
+               entregarían 122000 o 61 carretes de 2000 unidades, dejando un remanente de 1,456 unidades.
+    
+               Este método acepta uno o más lotes.
+            </p>
+        </div>
+        <hr>
+
+        <div id="batchtestresults" name="batchtestresults">
+            <h5 class="fw-bolder mt-3"><ul><li>batchtestresults.</li></ul></h5>
+
+            <p>Este método retorna los valores de las pruebas realizadas en los lotes; está información está disponible luego del TrackOut.
+                Entre la información retornada está:
+    
+               <ul>
+                <li>Valores de las mediciones.</li>
+                <li>Paso en el que se realizó la prueba.</li>
+                <li>Mediana.</li>
+                <li>Media.</li>
+                <li>Desviación estándar.</li>
+                <li>Operador.</li>
+                <li>Fecha.</li>
+                <li>Resultado de la prueba.</li>
+               </ul>
+    
+               Este método acepta uno o más lotes.
+            </p>
+        </div>
+
+<%- include('../includes/end.ejs') %>

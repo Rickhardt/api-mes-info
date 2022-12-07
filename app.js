@@ -1,14 +1,17 @@
+//Native Nodejs modules
+const path = require("path");
+
 //third-party packages
 const express = require("express");
 const bodyParser = require("body-parser");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const fs = require("fs");
-const path = require("path");
 
 //Custom references
 const repmesRoutes = require("./routes/repmes");
 const mesRoutes = require("./routes/mesprod");
+const otherRoutes = require("./routes/others");
 const errorController = require("./controllers/404");
 
 const app = express();
@@ -16,6 +19,26 @@ const accessLogStream = fs.createWriteStream(
   path.join(__dirname, "access.log"),
   { flags: "a" }
 );
+
+app.set("view engine", "ejs");
+app.set("views", "views");
+
+app.use(
+  "/css",
+  express.static(path.join(__dirname, "node_modules/bootstrap/dist/css"))
+);
+
+app.use(
+  "/js",
+  express.static(path.join(__dirname, "node_modules/bootstrap/dist/js"))
+);
+
+app.use(
+  "/js",
+  express.static(path.join(__dirname, "node_modules/jquery/dist"))
+);
+
+app.use("/img", express.static(path.join(__dirname, "img")));
 
 app.use(helmet());
 app.use(morgan("combined", { stream: accessLogStream }));
@@ -31,6 +54,7 @@ app.use((req, res, next) => {
 
 app.use("/repmes", repmesRoutes);
 app.use("/mes", mesRoutes);
+app.use(otherRoutes);
 app.use(errorController.get404);
 
 app.listen(2000);

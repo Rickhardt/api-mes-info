@@ -32,7 +32,7 @@ Information from batches can be return from either from MES or REPMES databases.
 
 - batchinfo (for MES and REPMES routes):
     - this query the information of the status of batches. This method can be used to query data from multiple batches at once and, depending of the route use, the information returned will be different:
-            - REPMES: data about the last step and handle where a TrackOut occur, new part type, old part type, stautc (i.e. active or otherwise), quantity of pieces up to the last TrackOut operation, case size, capacitance, voltage, semifinished new part type.
+            - REPMES: data about the last step and handle where a TrackOut occur, new part type, old part type, status (i.e. active or otherwise), quantity of pieces up to the last TrackOut operation, case size, capacitance, voltage, semifinished new part type.
             - MES: the same information as for the REPMES route but as it appears in the Factory Works Client, so, this is up-to-date information. It also returns the current rule being executed (or waiting to be executed), the time since a batch change the rule applied to it process plan it has assing.
 
 - batchattrib (for REPMES only):
@@ -61,3 +61,8 @@ Information from batches can be return from either from MES or REPMES databases.
 
 - eqpattrib (for MES only):
     - returns attributes assign to equipments; also, who created or modified the current version of the equipment, the description, the current batch loaded into it, the current state (e.g. IDLE), current capacity, user that interacted with it and the step it is assign to. Multiple equipments can be query at the same time.
+
+
+
+# Changes done on 12/06/2022
+- Added a "landing page" that serves as instructive for developers about how the API works and what can it do.
