@@ -1,5 +1,6 @@
 //Native Nodejs modules
 const path = require("path");
+const https = require("https");
 
 //third-party packages
 const express = require("express");
@@ -13,6 +14,9 @@ const repmesRoutes = require("./routes/repmes");
 const mesRoutes = require("./routes/mesprod");
 const otherRoutes = require("./routes/others");
 const errorController = require("./controllers/404");
+
+const privateKey = fs.readFileSync("server.key");
+const certificate = fs.readFileSync("server.cert");
 
 const app = express();
 const accessLogStream = fs.createWriteStream(
@@ -57,4 +61,4 @@ app.use("/mes", mesRoutes);
 app.use(otherRoutes);
 app.use(errorController.get404);
 
-app.listen(2000);
+https.createServer({ key: privateKey, cert: certificate }, app).listen(2000);
