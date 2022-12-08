@@ -1,0 +1,74 @@
+<%- include('../includes/header.ejs') %>
+    <div class="row">
+        <div class="col-md-8">
+            <h2 class="fw-bolder mt-3">Métodos misceláneos.</h2>
+        </div>
+
+        <div class="col-md-4 d-flex align-items-end justify-content-end">
+            <a href="/" class="fw-bolder fs-5 text">↩ Regresar a página anterior</a>
+        </div>
+
+    </div>
+
+    <h4 class="fw-bolder mt-3">Información general.</h4>
+
+    <div class="container">
+
+        <p>Estos métodos se llaman misceláneos porque no dependen de un objeto en específico, es decir, no es información que sea exclusiva
+           de un lote o producto (por ejemplo). Así, estos métodos se utilizan apendizando los valores a la url NO ENVIANDO JSON en el cuerpo
+           de la petición; por lo tanto estás peticiones se envían de esta forma:
+ 
+            <div class="row">
+                 <div class="col-md-11">
+                    <pre class="d-flex justify-content-center fw-bolder fs-5 text">http://server-name:port/method/VALUE</pre>
+                 </div>
+ 
+                 <div class="col-md-1 align-self-center">
+                         <p class="fw-bolder fs-5 text">1</p>
+                 </div>
+            </div>
+
+            De nuevo, se quiere hacer énfasis en que, para las peticiones misceláneas, no se debe enviar cuerpo (body) en la petición. La
+            respuesta de todas las peticiones de esta categoría es JSON.
+         </p>
+         <hr>
+
+         <h4 class="fw-bolder mt-3">Métodos.</h4>
+
+         <div id="batchinfomes" name="batchinfomes">
+             <h5 class="fw-bolder mt-3"><ul><li>rejectcode (MES).</li></ul></h5>
+
+             <h6 class="fw-bolder">Forma de la petición</h6>
+
+             <div class="row">
+                 <div class="col-md-11">
+                     <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                        https://10.0.51.253:2000/rejectcode/Step-Name
+                     </pre>
+                 </div>
+ 
+                 <div class="col-md-1 align-self-center">
+                         <p class="fw-bolder fs-5 text">2</p>
+                 </div>
+             </div>
+ 
+             <p>Donde <i>Step-Name</i> es cualquier nombre válido de un paso, por ejemplo, S_ALO_Weld</p>
+ 
+             <p>Este método retorna las razones de rechazo según el paso ingresado. La información que retorna es la siguiente:
+     
+                <ul>
+                 <li>Nombre de la razón o código de rechazo.</li>
+                 <li>Categoría.</li>
+                 <li>Estado.</li>
+                 <li>Descripción (en inglés).</li>
+                 <li>Descripción (en español).</li>
+                 <li>Atajo (usado en el cliente de Factory Works).</li>
+                 <li>Unidades.</li>
+                </ul>
+     
+                Este método solo acepta <b>un (1) paso</b> a la vez.
+             </p>
+         </div>
+    </div>
+
+<%- include('../includes/end.ejs') %>

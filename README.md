@@ -63,6 +63,18 @@ Information from batches can be return from either from MES or REPMES databases.
     - returns attributes assign to equipments; also, who created or modified the current version of the equipment, the description, the current batch loaded into it, the current state (e.g. IDLE), current capacity, user that interacted with it and the step it is assign to. Multiple equipments can be query at the same time.
 
 
+### Miscellaneous
+
+- rejectcode (for MES only):
+    - returns the rejects code for a specific step, their description and units. This method only accepts 1 value at a time and only accepts GET requests. The value search is encoded in the url, like so https://10.0.51.253:2000/rejectcode/S_ASO_Weld
+
+
 
 # Changes done on 12/06/2022
 - Added a "landing page" that serves as instructive for developers about how the API works and what can it do.
+
+
+# Changes done on 12/08/2022
+- Added a misc method to search for the reject codes of a specific path.
+- Added the explanation for that method on the landing page.
+- Fix minor typos in some of explanations

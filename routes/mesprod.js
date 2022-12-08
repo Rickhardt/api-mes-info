@@ -70,6 +70,60 @@ router.get(
   batchesController.getBatchActualPosition
 );
 
+router.post(
+  "/batchinfo",
+  [
+    body()
+      .custom((body, { req }) => {
+        contadorMalas = 0;
+
+        Object.keys(req.body).forEach((element) => {
+          if (
+            !Object.keys(req.body[element]).every((key) => {
+              return batchQueriesKeys.includes(key);
+            })
+          ) {
+            contadorMalas++;
+          }
+        });
+
+        if (contadorMalas > 0) {
+          return false;
+        } else {
+          return true;
+        }
+      })
+      .withMessage(
+        "Se ha omitido, o se ha agregado de más, un parámetro en el cuerpo de la petición"
+      ),
+
+    body()
+      .custom((body, { req }) => {
+        let specialCharactersRegEx = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?']/;
+
+        contadorMalas = 0;
+
+        Object.keys(req.body).forEach((element) => {
+          if (
+            req.body[element]["BATCH"].match(specialCharactersRegEx) != null
+          ) {
+            contadorMalas++;
+          }
+        });
+
+        if (contadorMalas > 0) {
+          return false;
+        } else {
+          return true;
+        }
+      })
+      .withMessage(
+        "Algunos de los miembros del cuerpo de la petición posee caracteres no válidos"
+      ),
+  ],
+  batchesController.getBatchActualPosition
+);
+
 router.get(
   "/processplan",
   [

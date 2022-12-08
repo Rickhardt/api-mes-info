@@ -13,7 +13,7 @@
     <h4 class="fw-bolder mt-3">Información general.</h4>
 
     <div class="container">
-        <p>Los métodos para lotes solo un valor dentro del par llave-valor (o también conocido como par nombre-valor). El nombre de la llave 
+        <p>Los métodos para lotes aceptan solo un valor dentro del par llave-valor (o también conocido como par nombre-valor). El nombre de la llave 
            DEBE ser <i>BATCH</i>, se muestra un ejemplo:
 
            <div class="row">
@@ -70,6 +70,24 @@
         <div id="batchinfomes" name="batchinfomes">
             <h5 class="fw-bolder mt-3"><ul><li>batchinfo (REPMES).</li></ul></h5>
 
+            <h6 class="fw-bolder">Forma de los elementos en la petición</h6>
+
+            <div class="row">
+                <div class="col-md-11">
+                    <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                        {
+                            "BATCH" : "BATCH-NUMBER"
+                        }
+                    </pre>
+                </div>
+
+                <div class="col-md-1 align-self-center">
+                        <p class="fw-bolder fs-5 text">2</p>
+                </div>
+            </div>
+
+            <p>El nombre de la llave <b>DEBE</b> ser como se ve en <b>(2)</b></p>
+
             <p>Este método retorna la misma información que el cliente de Factory, esto es para conocer el estado de un lote
                con la información más actualizada que se puede tener. Entre la información retornada está:
     
@@ -96,6 +114,24 @@
         <div id="batchinfo" name="batchinfo">
             <h5 class="fw-bolder mt-3"><ul><li>batchinfo (MESPROD).</li></ul></h5>
 
+            <h6 class="fw-bolder">Forma de los elementos en la petición</h6>
+
+            <div class="row">
+                <div class="col-md-11">
+                    <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                        {
+                            "BATCH" : "BATCH-NUMBER"
+                        }
+                    </pre>
+                </div>
+
+                <div class="col-md-1 align-self-center">
+                        <p class="fw-bolder fs-5 text">3</p>
+                </div>
+            </div>
+
+            <p>El nombre de la llave <b>DEBE</b> ser como se ve en <b>(3)</b></p>
+
             <p>Este método busca la información del estado del lote hasta el último TrackOut, está es información general y es como un snapshot
                de la posición actual del lote. Entre los datos que retorna están:
     
@@ -120,6 +156,24 @@
         <div id="batchattrib" name="batchattrib">
             <h5 class="fw-bolder mt-3"><ul><li>batchattrib.</li></ul></h5>
 
+            <h6 class="fw-bolder">Forma de los elementos en la petición</h6>
+
+            <div class="row">
+                <div class="col-md-11">
+                    <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                        {
+                            "BATCH" : "BATCH-NUMBER"
+                        }
+                    </pre>
+                </div>
+
+                <div class="col-md-1 align-self-center">
+                        <p class="fw-bolder fs-5 text">4</p>
+                </div>
+            </div>
+
+            <p>El nombre de la llave <b>DEBE</b> ser como se ve en <b>(4)</b></p>
+
             <p>Este método busca los valores de todos los atributos asignados a un lote hasta el último TrackOut.
                 Entre los datos que retorna están:
     
@@ -143,6 +197,24 @@
         <div id="batchstep" name="batchstep">
             <h5 class="fw-bolder mt-3"><ul><li>batchstep.</li></ul></h5>
 
+            <h6 class="fw-bolder">Forma de los elementos en la petición</h6>
+
+            <div class="row">
+                <div class="col-md-11">
+                    <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                        {
+                            "BATCH" : "BATCH-NUMBER"
+                        }
+                    </pre>
+                </div>
+
+                <div class="col-md-1 align-self-center">
+                        <p class="fw-bolder fs-5 text">5</p>
+                </div>
+            </div>
+
+            <p>El nombre de la llave <b>DEBE</b> ser como se ve en <b>(5)</b></p>
+
             <p>Este método retorna un historial de todos los procesos que ha tenido un lote hasta el último TrackOut.
                Entre los datos que retorna están:
     
@@ -163,6 +235,24 @@
 
         <div id="batchdefects" name="batchdefects">
             <h5 class="fw-bolder mt-3"><ul><li>batchdefects.</li></ul></h5>
+
+            <h6 class="fw-bolder">Forma de los elementos en la petición</h6>
+
+            <div class="row">
+                <div class="col-md-11">
+                    <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                        {
+                            "BATCH" : "BATCH-NUMBER"
+                        }
+                    </pre>
+                </div>
+
+                <div class="col-md-1 align-self-center">
+                        <p class="fw-bolder fs-5 text">6</p>
+                </div>
+            </div>
+
+            <p>El nombre de la llave <b>DEBE</b> ser como se ve en <b>(6)</b></p>
 
             <p>Este método retorna el comportamiento del lote en cuando a yield a lo largo del proceso. Entre los datos que retorna están:
     
@@ -192,6 +282,25 @@
 
         <div id="batchtestresults" name="batchtestresults">
             <h5 class="fw-bolder mt-3"><ul><li>batchtestresults.</li></ul></h5>
+
+            <h6 class="fw-bolder">Forma de los elementos en la petición</h6>
+
+            <div class="row">
+                <div class="col-md-11">
+                    <pre class="d-flex justify-content-center fw-bolder fs-6 text">
+                        {
+                            "BATCH" : "BATCH-NUMBER",
+                            "PRUEBA" : "NOMBRE-PRUEBA"
+                        }
+                    </pre>
+                </div>
+
+                <div class="col-md-1 align-self-center">
+                        <p class="fw-bolder fs-5 text">7</p>
+                </div>
+            </div>
+
+            <p>Los nombres de las llaves <b>DEBEN</b> ser como se ve en <b>(7)</b></p>
 
             <p>Este método retorna los valores de las pruebas realizadas en los lotes; está información está disponible luego del TrackOut.
                 Entre la información retornada está:

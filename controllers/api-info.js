@@ -12,3 +12,9 @@ exports.getLotMethodExplanation = (req, res, next) => {
     pageTitle: "Métodos relacionados con lotes",
   });
 };
+
+exports.getMiscMethodExplanation = (req, res, next) => {
+  res.render("api-info/api-info-misc", {
+    pageTitle: "Métodos misceláneos",
+  });
+};
