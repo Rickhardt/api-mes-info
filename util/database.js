@@ -50,3 +50,22 @@ exports.connectionMes = (credentials, tableName) => {
     }
   });
 };
+
+exports.connectionMesRW = () => {
+  return new Promise((resolve, reject) => {
+    try {
+      oracledb
+        .createPool({
+          user: "Fw_Prod",
+          password: "Dolor6sHill",
+          connectString: "10.0.50.7:1521/MESSALPROD",
+        })
+        .then((connection) => resolve(connection))
+        .catch((err) => reject(err));
+    } catch (error) {
+      return new Promise((resolve, reject) => {
+        resolve(error);
+      });
+    }
+  });
+};
