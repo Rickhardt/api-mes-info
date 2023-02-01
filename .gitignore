@@ -1,5 +1,7 @@
 node_modules
 access.log
-server.cert
-server.key
+avxslv.com.crt
+avxslv.com.key
+avxslv.com.ca.crt
+avxslv.com.csr
 nodemon.json

@@ -1,7 +1,7 @@
 {
-  "name": "nodejs_api_course",
+  "name": "api-mes-info",
   "version": "1.0.0",
-  "description": "Udemy API course",
+  "description": "API that extracts information from MES.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

@@ -15,8 +15,8 @@ const mesRoutes = require("./routes/mesprod");
 const otherRoutes = require("./routes/others");
 const errorController = require("./controllers/404");
 
-const privateKey = fs.readFileSync("server.key");
-const certificate = fs.readFileSync("server.cert");
+const privateKey = fs.readFileSync(__dirname + "/avxslv.com.key", "utf8");
+const certificate = fs.readFileSync(__dirname + "/avxslv.com.crt", "utf8");
 
 const app = express();
 const accessLogStream = fs.createWriteStream(
