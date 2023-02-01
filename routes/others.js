@@ -18,6 +18,10 @@ router.get("/", apiInfoController.getIndex);
 router.get("/api-info-lotes", apiInfoController.getLotMethodExplanation);
 router.get("/api-info-misc", apiInfoController.getMiscMethodExplanation);
 router.get("/rejectcode/:stepName", othersController.getRejectCodes);
+router.get(
+  "/availablelocators/:bufferName",
+  othersController.getAvailableLocators
+);
 
 /************************************************************/
 
@@ -30,23 +34,21 @@ router.post(
         contador = 0;
 
         Object.keys(req.body).forEach((element) => {
-          if (contador === Object.keys(req.body).length - 1) {
-            if (
+          if (
+            (!Object.keys(req.body[element]).every((key) => {
+              return locatorKeys.includes(key);
+            }) &&
               !Object.keys(req.body[element]).every((key) => {
                 return userKeys.includes(key);
-              })
-            ) {
-              contadorMalas++;
-            }
-          } else {
-            console.log(req.body[element]);
-            if (
-              !Object.keys(req.body[element]).every((key) => {
-                return locatorKeys.includes(key);
-              })
-            ) {
-              contadorMalas++;
-            }
+              })) ||
+            (Object.keys(req.body[element]).every((key) => {
+              return locatorKeys.includes(key);
+            }) &&
+              Object.keys(req.body[element]).every((key) => {
+                return userKeys.includes(key);
+              }))
+          ) {
+            contadorMalas++;
           }
 
           contador++;
@@ -76,25 +78,24 @@ router.put(
         contador = 0;
 
         Object.keys(req.body).forEach((element) => {
-          contador++;
-
-          if (contador === Object.keys(req.body).length) {
-            if (
+          if (
+            (!Object.keys(req.body[element]).every((key) => {
+              return updateLocatorKeys.includes(key);
+            }) &&
               !Object.keys(req.body[element]).every((key) => {
                 return userKeys.includes(key);
-              })
-            ) {
-              contadorMalas++;
-            }
-          } else {
-            if (
-              !Object.keys(req.body[element]).every((key) => {
-                return updateLocatorKeys.includes(key);
-              })
-            ) {
-              contadorMalas++;
-            }
+              })) ||
+            (Object.keys(req.body[element]).every((key) => {
+              return updateLocatorKeys.includes(key);
+            }) &&
+              Object.keys(req.body[element]).every((key) => {
+                return userKeys.includes(key);
+              }))
+          ) {
+            contadorMalas++;
           }
+
+          contador++;
         });
 
         if (contadorMalas > 0) {

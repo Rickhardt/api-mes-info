@@ -489,6 +489,87 @@ exports.getBatchActualPosition = (req, res, next) => {
   );
 };
 
+/*Posición actual de un lote. Esto es tal cual aparece en el cliente
+ *Retorna:
+ *        - Número de lote
+ *        - Producto (o "nuevo" número de parte)
+ *        - Estado del lote en MES
+ *        - PlanName
+ *         - Cantidad de unidades al ingresar al paso
+ *         - Lote originador
+ *         - Producto del lote originador
+ *         - Paso actual
+ *         - Handle
+ *         - Máquina en la que se ha cargado (si se ha cargado a una, en otro caso muestra NULL)
+ *         - Esto de la regla actual
+ *         - Nombre de la regla que se está ejecutando o que se va a ejecutar (ya sea por intervención de usuario o no)
+ *         - Cuando ingreso al paso
+ *Extraído de MES*/
+exports.getBatchActualPositionSingle = (req, res, next) => {
+  const errors = validationResult(req);
+  sql = "";
+
+  if (!errors.isEmpty()) {
+    return res.json({
+      ERRORES: errors.array(),
+    });
+  }
+
+  let responseToSend = {
+    MENSAJE:
+      "Información actual del lote. Esto es tal cual se ve en el cliente de Factory Works.",
+  };
+
+  const batch = req.params.batchName;
+
+  //Formando la sentencia para número desconocido de valores
+  sql = `WITH PART_NBR_OLD AS
+         (SELECT A.NAME AS PRODUCTNAME, F.MAGNITUDE
+               FROM FW_PROD.FWPRODUCT A
+               INNER JOIN FW_PROD.FWPRODUCT_N2M B ON B.FROMID = A.SYSID
+               INNER JOIN FW_PROD.FWPRODUCTVERSION C ON C.SYSID = B.TOID
+               INNER JOIN FW_PROD.FWPRODUCTVERSION_N2M D ON D.FROMID = C.SYSID
+               INNER JOIN FW_PROD.FWPRPATTRIBUTEINSTANCE F ON F.SYSID = D.TOID
+               INNER JOIN FW_PROD.FWPRPATTRIBUTE G ON G.SYSID = F.ATTRCLASS
+               WHERE C.REVSTATE = 'Active' AND D.KEYDATA = 'Product_CrossRef_ID')
+         SELECT A.APPID, C.PROCESSINGSTATE, A.PRODUCTNAME, G.MAGNITUDE AS OLD_PART_TYPE, A.PLANNAME, A.COMPONENTQTY,
+              A.VENDORLOTID, A.VENDORID, C.STEPNAME, C.HANDLE, C.LOCATION, F.RULENAME, C.TIMEHERESINCE
+         FROM FW_PROD.FWLOT A
+         INNER JOIN FW_PROD.FWLOT_N2M B ON B.FROMID = A.SYSID
+         INNER JOIN FW_PROD.FWWIPSTEP C ON C.SYSID = B.TOID
+         INNER JOIN FW_PROD.FWWIPSTEP_N2M E ON E.FROMID = C.SYSID AND C.CURRENTRULEINDEX = E.SEQUENCE
+         INNER JOIN FW_PROD.FWWIPSTEPRULE F ON F.SYSID = E.TOID
+         INNER JOIN PART_NBR_OLD G ON G.PRODUCTNAME = A.PRODUCTNAME
+         WHERE A.APPID = :v0`;
+
+  //Ejecutando consulta en la base de datos
+  RepmesTables.credentialResults("MESSALPROD").then((results) =>
+    RepmesTables.connectionRepmes(results, "MESSALPROD")
+      .then((results) => {
+        results.getConnection().then((oracleDbConnection) => {
+          oracleDbConnection
+            .execute(sql, [batch])
+            .then((results) => {
+              results.rows.push(responseToSend);
+              res.status(200).json(results.rows);
+            })
+            .catch((error) => {
+              res.status(422).json({
+                MENSAJE: error.message,
+                ERRORES: error,
+              });
+            });
+        });
+      })
+      .catch((error) => {
+        res.status(422).json({
+          MENSAJE: error.message,
+          ERRORES: error.array(),
+        });
+      })
+  );
+};
+
 ///Información de las mediciones de los lotes para diferentes pruebas (como la WetScan por ejemplo)
 exports.getBatchTestResults = (req, res, next) => {
   const errors = validationResult(req);

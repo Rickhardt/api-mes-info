@@ -90,6 +90,8 @@ exports.getRejectCodes = (req, res, next) => {
 exports.getAvailableLocators = (req, res, next) => {
   const errors = validationResult(req);
   sql = "";
+  let protoResponse = null;
+  let connectionResource = null;
 
   if (!errors.isEmpty()) {
     return res.json({
@@ -97,29 +99,53 @@ exports.getAvailableLocators = (req, res, next) => {
     });
   }
 
-  const rejectCodesStep = req.params.stepName;
+  const buffer = req.params.bufferName;
   let responseToSend = {
-    MENSAJE: "Razones de rechazo del paso enviado.",
+    MENSAJE:
+      "Se toma como ubicación disponible la que cumpla la siguiente condición: (OCCUPIED = 0 AND CAPACITY = 1 AND CURRENT_LOT IS NULL)",
   };
 
   batch = [];
 
   //Formando la sentencia para número desconocido de valores
   sql =
-    "SELECT STEP_NAME, REJECT_CODE, REJECT_CATEGORY, STATE, DESCRIPTION, DESCRIPTION_LL, SHORTCUT, UNITS_LL " +
-    "FROM FW_PROD.FWCATNS_REJECT_CODES " +
-    "WHERE STEP_NAME = :v0";
+    "SELECT LOCATION, USERID, TIMEOFCHANGE " +
+    "FROM FW_PROD.FWCATNS_LOCATIONS " +
+    "WHERE BUFFER = :v0 AND OCCUPIED = 0 AND CAPACITY = 1 AND CURRENT_LOT IS NULL";
 
   //Ejecutando consulta en la base de datos
   RepmesTables.credentialResults("MESSALPROD").then((results) =>
     RepmesTables.connectionRepmes(results, "MESSALPROD")
       .then((results) => {
+        connectionResource = results;
+        //Retorna las ubicaciones que están disponibles, el último usuario que modificó el estado de la ubicación y la hora en que sucedió
         results.getConnection().then((oracleDbConnection) => {
           oracleDbConnection
-            .execute(sql, [rejectCodesStep])
+            .execute(sql, [buffer])
             .then((results) => {
-              results.rows.push(responseToSend);
-              res.status(200).json(results.rows);
+              protoResponse = results.rows;
+            }) //Obtiene el total de ubicaciones que se consideran disponibles
+            .then((results) => {
+              connectionResource.getConnection().then((oracleDbConnection) => {
+                sql =
+                  "SELECT COUNT(*) Total_Ubicaciones_Disponibles " +
+                  "FROM FW_PROD.FWCATNS_LOCATIONS " +
+                  "WHERE BUFFER = :v0 AND OCCUPIED = 0 AND CAPACITY = 1 AND CURRENT_LOT IS NULL";
+
+                oracleDbConnection
+                  .execute(sql, [buffer])
+                  .then((results) => {
+                    protoResponse.push(results.rows);
+                    protoResponse.push(responseToSend);
+                    res.status(200).json(protoResponse);
+                  })
+                  .catch((error) => {
+                    res.status(422).json({
+                      MENSAJE: error.message,
+                      ERRORES: error,
+                    });
+                  });
+              });
             })
             .catch((error) => {
               res.status(422).json({
@@ -214,177 +240,6 @@ exports.postNewLocators = (req, res, next) => {
   //Sentencia a utilizar para la verificación
   sql =
     "SELECT USERNAME, NICKNAME FROM FW_PROD.FWUSERPROFILE WHERE USERNAME = :v1";
-
-  RepmesTables.credentialResults("MESSALPROD").then((results) =>
-    RepmesTables.connectionRepmes(results, "MESSALPROD")
-      .then((results) => {
-        results.getConnection().then((oracleDbConnection) => {
-          oracleDbConnection
-            .execute(sql, [user])
-            .then((results) => {
-              if (results.rows.length === 0) {
-                const error = new Error(
-                  "No se encontró ningún registro para el usuario ingresado. Verifique que fue escrito de forma correcta y pruebe de nuevo."
-                );
-
-                error.statusCode = 404;
-                throw error;
-              }
-
-              if (results.rows[0]["NICKNAME"] === null) {
-                commitingUser = results.rows[0]["USERNAME"];
-              } else {
-                commitingUser = results.rows[0]["NICKNAME"];
-              }
-
-              //Formando la sentencia para número desconocido de valores
-              sql =
-                "INSERT INTO FW_PROD.FWCATNS_LOCATIONS VALUES(:v1, :v2, :v3, :v4, :v5, :v6, :v7)";
-
-              for (let index = 0; index < locator.length; index++) {
-                //Valores a insertar en tabla
-                arrayValuesToInsert[index] = [
-                  buffer[index], //Tipo de bodega
-                  locator[index], //Ubicación física en bodega
-                  null, //Lote actual en ubicación
-                  0, //Ocupado (sí, no)
-                  1, //Disponibilidad (sí, no)
-                  commitingUser, //Usuario que agregó las ubicaciones
-                  formattedDate, //Fecha en la que se realizó la inserción
-                ];
-              }
-
-              const executionOptions = {
-                autoCommit: true,
-                batcheErrors: true,
-                bindDefs: [
-                  { type: oracledb.STRING, maxSize: 8 },
-                  { type: oracledb.STRING, maxSize: 8 },
-                  { type: oracledb.STRING, maxSize: 15 },
-                  { type: oracledb.NUMBER },
-                  { type: oracledb.NUMBER },
-                  { type: oracledb.STRING, maxSize: 100 },
-                  { type: oracledb.STRING, maxSize: 18 },
-                ],
-              };
-
-              //Inserta datos en la tabla
-              RepmesTables.connectionMesRW()
-                .then((results) => {
-                  results.getConnection().then((oracleDbConnection) => {
-                    oracleDbConnection
-                      .executeMany(sql, arrayValuesToInsert, executionOptions)
-                      .then((results) => {
-                        if (results.rowsAffected > 0) {
-                          res.status(200).json(results.rows);
-                        }
-                      })
-                      .catch((error) => {
-                        res.status(422).json({
-                          MENSAJE: error.message,
-                          ERRORES: error,
-                        });
-                      });
-                  });
-                })
-                .catch((error) => {
-                  res.status(422).json({
-                    MENSAJE: error.message,
-                    ERRORES: error.array(),
-                  });
-                });
-            })
-            .catch((error) => {
-              res.status(422).json({
-                MENSAJE: error.message,
-                ERRORES: error,
-              });
-            });
-        });
-      })
-      .catch((error) => {
-        res.status(422).json({
-          MENSAJE: error.message,
-          ERRORES: error.array(),
-        });
-      })
-  );
-};
-
-///Inserta localizadores nuevos
-///Inserción a MES
-exports.postNewLocators = (req, res, next) => {
-  const errors = validationResult(req);
-  sql = "";
-  user = "";
-  let commitingUser = "";
-
-  if (!errors.isEmpty()) {
-    return res.json({
-      ERRORES: errors.array(),
-    });
-  }
-
-  //Se forma la hora con el formato aceptado actualmente por Factory Works
-  const dateActual = new Date();
-
-  yearActual = dateActual.toLocaleDateString("es-SV", { year: "numeric" });
-  monthActual = dateActual.toLocaleDateString("es-SV", {
-    month: "2-digit",
-  });
-  dayActual = dateActual.toLocaleDateString("es-SV", { day: "2-digit" });
-
-  hourActual = dateActual.toLocaleTimeString("es-SV", {
-    hour: "2-digit",
-    hour12: false,
-  });
-  minutesActual = dateActual.toLocaleTimeString("es-SV", {
-    minute: "2-digit",
-  });
-  secondsActual = dateActual.toLocaleTimeString("es-SV", {
-    second: "2-digit",
-  });
-
-  formattedDate =
-    yearActual +
-    monthActual +
-    dayActual +
-    " " +
-    hourActual +
-    minutesActual +
-    secondsActual +
-    "000";
-
-  arrayValuesToInsert.length = 0;
-  locator = [];
-  buffer = [];
-
-  switch (Object.keys(req.body).length) {
-    case 0:
-      return res.status(422).json({
-        MENSAJE:
-          "No se puede insertar datos, un par LOCALIZADOR-BUFFER está incompleto. Verifique el cuerpo de la petición",
-      });
-      break;
-    default:
-      Object.keys(req.body).forEach((element) => {
-        locator.push(req.body[element]["LOCATOR"]);
-      });
-
-      Object.keys(req.body).forEach((element) => {
-        buffer.push(req.body[element]["BUFFER"]);
-      });
-      break;
-  }
-
-  //Usuario utilizado para la inserción de datos
-  user =
-    req.body[Object.keys(req.body)[Object.keys(req.body).length - 1]]["USER"];
-
-  //Se verifica que el usuario exista y que tenga permisos de escritura en la base (por el momento esto significa que el rol sea UNIVERSAl)
-  //Sentencia a utilizar para la verificación
-  sql =
-    "SELECT USERNAME, NICKNAME FROM FW_PROD.FWUSERPROFILE WHERE USERNAME = :v1 AND USERGROUP = 'Universal'";
 
   RepmesTables.credentialResults("MESSALPROD").then((results) =>
     RepmesTables.connectionRepmes(results, "MESSALPROD")
@@ -620,8 +475,6 @@ exports.putUpdateLocators = (req, res, next) => {
                   { type: oracledb.STRING, maxSize: 18 },
                 ],
               };
-
-              console.log(arrayValuesToModify);
 
               //Inserta datos en la tabla
               RepmesTables.connectionMesRW()

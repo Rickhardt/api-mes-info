@@ -16,7 +16,7 @@ const productQueriesKeys = ["PRODUCTO"];
 const batchQueriesKeys = ["BATCH"];
 const eqpQueriesKeys = ["EQUIPO"];
 
-router.get(
+/*router.get(
   "/batchinfo",
   [
     body()
@@ -68,6 +68,11 @@ router.get(
       ),
   ],
   batchesController.getBatchActualPosition
+);*/
+
+router.get(
+  "/batchinfo/:batchName",
+  batchesController.getBatchActualPositionSingle
 );
 
 router.post(

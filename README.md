@@ -14,6 +14,9 @@ Currently (04/12/2022) this API can handle request for information about:
 - Process Plans, and
 - Machines.
 
+Methods added on 05/01/2023:
+- Buffers
+
 this was done taking into account was is often requested from users (for example, for batches new part type and old part type are always requested in a query); some took into account that the information is not so simple to extract from the database and could be of great use (for example, the attributes of equipments). More request could be added if it seems worthy, but queries that are used for specific applications and seem to be of no use for the general public (i.e. that are only used in one and one application only and other users see them as meaningless) must be done by each developer individually.
 
 ## General information about the API
@@ -77,4 +80,23 @@ Information from batches can be return from either from MES or REPMES databases.
 # Changes done on 12/08/2022
 - Added a misc method to search for the reject codes of a specific path.
 - Added the explanation for that method on the landing page.
-- Fix minor typos in some of explanations
+- Fix minor typos for some explanations
+
+
+# Changes done on 01/05/2023
+- Added a methods to manage buffers. Methods were created to update information about locations on the table FWCATNS_LOCATIONS, this methods are accesible through the "other" route. The methods are:
+    - updatelocator: use to change information of locations and to change their status (able, disable, availabel, unavailable). This method needs 4 values for each JSON element: Location to update, batch (usually it will be either "INVALID" or NULL values) and Occupied and Capacity flag (that takes 0 or 1 values). It also needs an element that shows the user that is making the modifications, the image below shows an example, note that the number for the key of each element don't really matter, as they don't necessarily need to be numbers, also, the names for the keys inside each element ARE MANDATORY AND SHOULD NOT BE NAME IN ANY OTHER WAY.
+
+    ![Alt text](img/peticion-PUT-locators.png "Example of how the JSON for the method updatelocator needs to be form")
+
+
+    - createlocator: create a new entry on the FWCATNS_LOCATOR table. Is used when new locations need to be added to a particular buffer, this method needs the locator name and the buffer to it will be assign; we also need to specify the user that created the new locations.the image below shows an example, note that the number for the key of each element don't really matter, as they don't necessarily need to be numbers, also, the names for the keys inside each element ARE MANDATORY AND SHOULD NOT BE NAME IN ANY OTHER WAY.
+
+        ![Alt text](img/peticion-POST-locators.png "Example of how the JSON for the method createlocator needs to be form")
+
+
+    - availablelocators: returns the locations available in a particular buffer and the quantity of locations availables. The value search is encoded in the url, like so https://10.0.51.253:2000/availablelocators/RABUFFER
+
+
+# Changes done on 02/01/2023
+- changed the batchinfo to be a standard get method, so the value search could be in the URL, instead of sending a body.
