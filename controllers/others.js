@@ -85,6 +85,117 @@ exports.getRejectCodes = (req, res, next) => {
   );
 };
 
+///Información de la recete de AcidClean para los lotes de proceso quimico
+///Extraído de MES
+exports.getBatchRecipe = (req, res, next) => {
+  const errors = validationResult(req);
+  sql = "";
+
+  if (!errors.isEmpty()) {
+    return res.json({
+      ERRORES: errors.array(),
+    });
+  }
+
+  const batch = req.params.batch;
+
+  //Formando la sentencia para número desconocido de valores
+  sql =
+    "WITH PART_NBR_OLD AS " +
+    "(SELECT A.NAME AS PRODUCTNAME, G.NAME AS ATTRIBUTE, F.MAGNITUDE " +
+    "      FROM FW_PROD.FWPRODUCT A " +
+    "      INNER JOIN FW_PROD.FWPRODUCT_N2M B ON B.FROMID = A.SYSID " +
+    "      INNER JOIN FW_PROD.FWPRODUCTVERSION C ON C.SYSID = B.TOID " +
+    "      INNER JOIN FW_PROD.FWPRODUCTVERSION_N2M D ON D.FROMID = C.SYSID " +
+    "      INNER JOIN FW_PROD.FWPRPATTRIBUTEINSTANCE F ON F.SYSID = D.TOID " +
+    "      INNER JOIN FW_PROD.FWPRPATTRIBUTE G ON G.SYSID = F.ATTRCLASS " +
+    "      WHERE C.REVSTATE = 'Active' AND D.KEYDATA = 'Form_Recipe') " +
+    "SELECT A.PRODUCTNAME, I.PARAMETER_NAME, I.RECIPE_NAME, I.PARAMETER_VALUE_STRING, " +
+    "     A.COMPONENTQTY, H.VALDATA AS QTY_PALLETS, C.STEPNAME " +
+    "FROM FW_PROD.FWLOT A " +
+    "INNER JOIN FW_PROD.FWLOT_N2M B ON B.FROMID = A.SYSID " +
+    "INNER JOIN FW_PROD.FWWIPSTEP C ON C.SYSID = B.TOID " +
+    "INNER JOIN FW_PROD.FWWIPSTEP_N2M E ON E.FROMID = C.SYSID AND C.CURRENTRULEINDEX = E.SEQUENCE " +
+    "INNER JOIN FW_PROD.FWWIPSTEPRULE F ON F.SYSID = E.TOID " +
+    "INNER JOIN PART_NBR_OLD G ON G.PRODUCTNAME = A.PRODUCTNAME " +
+    "INNER JOIN FW_PROD.FWLOT_PN2M H ON H.FROMID = A.SYSID " +
+    "INNER JOIN FW_PROD.FWCATNS_PROCESS_RECIPES I ON I.RECIPE_NAME = G.MAGNITUDE AND I.PARAMETER_NAME = 'Acid_Clean' " +
+    "WHERE A.APPID = :v0 AND H.KEYDATA = 'QTY_PALLETS' AND I.STATE = 'Active'";
+
+  //Ejecutando consulta en la base de datos
+  RepmesTables.credentialResults("MESSALPROD").then((results) =>
+    RepmesTables.connectionRepmes(results, "MESSALPROD")
+      .then((results) => {
+        results.getConnection().then((oracleDbConnection) => {
+          oracleDbConnection
+            .execute(sql, [batch])
+            .then((results) => {
+              res.status(200).json(results.rows);
+            })
+            .catch((error) => {
+              res.status(422).json({
+                MENSAJE: error.message,
+                ERRORES: error,
+              });
+            });
+        });
+      })
+      .catch((error) => {
+        res.status(422).json({
+          MENSAJE: error.message,
+          ERRORES: error.array(),
+        });
+      })
+  );
+};
+
+///Retorna el nombre asociado al badge en la tabla FWCATNS_OPERATORS. De no existir retorna un espacio en blanco
+///Extraído de MES
+exports.getOperatorName = (req, res, next) => {
+  const errors = validationResult(req);
+  sql = "";
+
+  if (!errors.isEmpty()) {
+    return res.json({
+      ERRORES: errors.array(),
+    });
+  }
+
+  const badge = req.params.badge;
+
+  //Formando la sentencia para número desconocido de valores
+  sql =
+    "SELECT NVL((FIRST_NAME || LAST_NAME), '') AS NOMBRE_OPERADOR " +
+    "FROM FW_PROD.FWCATNS_OPERATORS " +
+    "WHERE PERSONAL_ID = :v0";
+
+  //Ejecutando consulta en la base de datos
+  RepmesTables.credentialResults("MESSALPROD").then((results) =>
+    RepmesTables.connectionRepmes(results, "MESSALPROD")
+      .then((results) => {
+        results.getConnection().then((oracleDbConnection) => {
+          oracleDbConnection
+            .execute(sql, [badge])
+            .then((results) => {
+              res.status(200).json(results.rows);
+            })
+            .catch((error) => {
+              res.status(422).json({
+                MENSAJE: error.message,
+                ERRORES: error,
+              });
+            });
+        });
+      })
+      .catch((error) => {
+        res.status(422).json({
+          MENSAJE: error.message,
+          ERRORES: error.array(),
+        });
+      })
+  );
+};
+
 ///Cantidad de ubicaciones disponibles para un Buffer determinado
 ///Extraído de MES
 exports.getAvailableLocators = (req, res, next) => {
@@ -146,6 +257,259 @@ exports.getAvailableLocators = (req, res, next) => {
                     });
                   });
               });
+            })
+            .catch((error) => {
+              res.status(422).json({
+                MENSAJE: error.message,
+                ERRORES: error,
+              });
+            });
+        });
+      })
+      .catch((error) => {
+        res.status(422).json({
+          MENSAJE: error.message,
+          ERRORES: error.array(),
+        });
+      })
+  );
+};
+
+///Retorna información de ubicaciones de buffer según petición del usuario. Las consultas se generan basados en estos parámetros
+///Extraído de MES
+exports.getLocationInformation = (req, res, next) => {
+  const errors = validationResult(req);
+  sql = "";
+
+  //Variables para determinar si se han enviado ubicaciones en específico o no
+  let initialNumberFieldsSet = false;
+  let finalNumberFieldsSet = false;
+
+  //Variables que tendran las ubicaciones en específico
+  let initialNumberFields;
+  let finalNumberFields;
+
+  if (!errors.isEmpty()) {
+    return res.json({
+      ERRORES: errors.array(),
+    });
+  }
+
+  let bufferType = "";
+  const estadoBuffer = req.query.estadoBuffer;
+
+  if (req.query.initialNumberFields != null) {
+    initialNumberFieldsSet = true;
+    initialNumberFields = req.query.initialNumberFields;
+  }
+
+  if (req.query.finalNumberFields != null) {
+    finalNumberFieldsSet = true;
+    finalNumberFields = req.query.finalNumberFields;
+  }
+
+  console.log(req.query.initialNumberFields == null);
+
+  switch (req.query.bufferType) {
+    case "paBuffer":
+      bufferType = "PABUFFER";
+      break;
+    case "raBuffer":
+      bufferType = "RABUFFER";
+      break;
+    case "cfBuffer":
+      bufferType = "CFBUFFER";
+      break;
+    default:
+      bufferType = "RABUFFER";
+      break;
+  }
+
+  //Conformal y solo las ubicaciones que se ingresaron (sino todas las ubicaciones)
+  if (estadoBuffer == "all" && bufferType == "CFBUFFER") {
+    /// Se comprueba si los usuarios han ingresado un rango específico de ubicaciones, de no haberlas retorna todas las ubicaciones creadas para el buffer seleccionado.
+    /// Luego arma la consulta dependiendo de cuantos "rangos" diferentes se ingresaron. En caso de ser más de 1 la consulta se construye con UNION para retornar los diferentes rangos en una sola respuesta
+    if (initialNumberFieldsSet && finalNumberFieldsSet) {
+      for (i = 0; i < initialNumberFields.length; i++) {
+        if (i == initialNumberFields.length - 1) {
+          sql =
+            sql +
+            `SELECT * FROM (SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+            `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+            `WHERE BUFFER = '` +
+            bufferType +
+            `' AND REGEXP_LIKE(LOCATION, '^CF\\d{2,4}$')) WHERE ` +
+            `(TO_NUMBER(SUBSTR(LOCATION, 3)) >= ` +
+            parseInt(initialNumberFields[i]) +
+            ` AND ` +
+            `TO_NUMBER(SUBSTR(LOCATION, 3)) <= ` +
+            parseInt(finalNumberFields[i]) +
+            `)`;
+        } else {
+          sql =
+            sql +
+            `SELECT * FROM (SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+            `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+            `WHERE BUFFER = '` +
+            bufferType +
+            `' AND REGEXP_LIKE(LOCATION, '^CF\\d{2,4}$')) WHERE ` +
+            `(TO_NUMBER(SUBSTR(LOCATION, 3)) >= ` +
+            parseInt(initialNumberFields[i]) +
+            ` AND ` +
+            `TO_NUMBER(SUBSTR(LOCATION, 3)) <= ` +
+            parseInt(finalNumberFields[i]) +
+            `) UNION `;
+        }
+      }
+    } else {
+      sql =
+        `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+        `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+        `WHERE BUFFER = '` +
+        bufferType +
+        `'`;
+    }
+    //Conformal y solo ubicaciones activas
+  } else if (estadoBuffer == "available" && bufferType == "CFBUFFER") {
+    sql =
+      `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+      `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+      `WHERE BUFFER = 'CFBUFFER' AND REGEXP_LIKE(LOCATION, '^\w{2}\d{2,4}') AND ` +
+      `      ((OCCUPIED = 1 AND CAPACITY = 1 AND CURRENT_LOT != 'INVALID') OR ` +
+      `     (OCCUPIED = 0 AND CAPACITY = 1 AND CURRENT_LOT IS NULL))`;
+    //Conformal y solo ubicaciones inactivas
+  } else if (estadoBuffer == "disable" && bufferType == "CFBUFFER") {
+    sql =
+      `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+      `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+      `WHERE BUFFER = 'CFBUFFER' AND REGEXP_LIKE(LOCATION, '^\w{2}\d{2,4}') AND ` +
+      `      (OCCUPIED = 0 AND CAPACITY = 0 AND (CURRENT_LOT = 'INVALID' OR CURRENT_LOT IS NULL))`;
+    //Cualquiera que no sea Conformal y solo las que se seleccionaron (sino todas las ubicaciones)
+  } else if (estadoBuffer == "all" && bufferType == "RABUFFER") {
+    if (initialNumberFieldsSet && finalNumberFieldsSet) {
+      for (i = 0; i < initialNumberFields.length; i++) {
+        if (i == initialNumberFields.length - 1) {
+          sql =
+            sql +
+            `SELECT * FROM (SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+            `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+            `WHERE BUFFER = '` +
+            bufferType +
+            `' AND REGEXP_LIKE(LOCATION, '^\\w{2}\\d{3,4}\\w{1}')) WHERE ` +
+            `(TO_NUMBER(SUBSTR(LOCATION, 3, (LENGTH(LOCATION) - 3))) >= ` +
+            parseInt(initialNumberFields[i]) +
+            ` AND ` +
+            `TO_NUMBER(SUBSTR(LOCATION, 3, (LENGTH(LOCATION) - 3))) <= ` +
+            parseInt(finalNumberFields[i]) +
+            `)`;
+        } else {
+          sql =
+            sql +
+            `SELECT * FROM (SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+            `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+            `WHERE BUFFER = '` +
+            bufferType +
+            `' AND REGEXP_LIKE(LOCATION, '^\\w{2}\\d{3,4}\\w{1}')) WHERE ` +
+            `(TO_NUMBER(SUBSTR(LOCATION, 3, (LENGTH(LOCATION) - 3))) >= ` +
+            parseInt(initialNumberFields[i]) +
+            ` AND ` +
+            `TO_NUMBER(SUBSTR(LOCATION, 3, (LENGTH(LOCATION) - 3))) <= ` +
+            parseInt(finalNumberFields[i]) +
+            `) UNION `;
+        }
+      }
+    } else {
+      sql =
+        `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+        `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+        `WHERE BUFFER = '` +
+        bufferType +
+        `'`;
+    }
+    //Conformal y solo ubicaciones activas
+  } else if (estadoBuffer == "available" && bufferType == "RABUFFER") {
+    sql =
+      `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+      ` FROM FW_PROD.FWCATNS_LOCATIONS ` +
+      ` WHERE BUFFER = 'RABUFFER' AND REGEXP_LIKE(LOCATION, '^\w{2}\d{3,4}\w{1}') AND ` +
+      `      (OCCUPIED = 0 AND CAPACITY = 0 AND (CURRENT_LOT = 'INVALID' OR CURRENT_LOT IS NULL))`;
+    //Conformal y solo ubicaciones inactivas
+  } else if (estadoBuffer == "disable" && bufferType == "RABUFFER") {
+    sql =
+      `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+      `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+      `WHERE BUFFER = 'RABUFFER' AND REGEXP_LIKE(LOCATION, '^\w{2}\d{2,4}') AND ` +
+      `   ((OCCUPIED = 1 AND CAPACITY = 1 AND CURRENT_LOT != 'INVALID') OR ` +
+      `    (OCCUPIED = 0 AND CAPACITY = 1 AND CURRENT_LOT IS NULL))`;
+    //Cualquiera que no sea Conformal y solo las que se seleccionaron (sino todas las ubicaciones)
+  } else if (estadoBuffer == "all" && bufferType == "PABUFFER") {
+    if (initialNumberFieldsSet && finalNumberFieldsSet) {
+      for (i = 0; i < initialNumberFields.length; i++) {
+        if (i == initialNumberFields.length - 1) {
+          sql =
+            sql +
+            `SELECT * FROM (SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+            `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+            `WHERE BUFFER = '` +
+            bufferType +
+            `' AND REGEXP_LIKE(LOCATION, '^C\\d{3}\\w{1}')) WHERE ` +
+            `(TO_NUMBER(SUBSTR(LOCATION, 2, 3)) >= ` +
+            parseInt(initialNumberFields[i]) +
+            ` AND ` +
+            `TO_NUMBER(SUBSTR(LOCATION, 2, 3)) <= ` +
+            parseInt(finalNumberFields[i]) +
+            `)`;
+        } else {
+          sql =
+            sql +
+            `SELECT * FROM (SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+            `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+            `WHERE BUFFER = '` +
+            bufferType +
+            `' AND REGEXP_LIKE(LOCATION, '^C\\d{3}\\w{1}')) WHERE ` +
+            `(TO_NUMBER(SUBSTR(LOCATION, 2, 3)) >= ` +
+            parseInt(initialNumberFields[i]) +
+            ` AND ` +
+            `TO_NUMBER(SUBSTR(LOCATION, 2, 3)) <= ` +
+            parseInt(finalNumberFields[i]) +
+            `) UNION `;
+        }
+      }
+    } else {
+      sql =
+        `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+        `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+        `WHERE BUFFER = '` +
+        bufferType +
+        `'`;
+    }
+    //Conformal y solo ubicaciones activas
+  } else if (estadoBuffer == "available" && bufferType == "PABUFFER") {
+    sql =
+      `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+      ` FROM FW_PROD.FWCATNS_LOCATIONS ` +
+      ` WHERE BUFFER = 'PABUFFER' AND REGEXP_LIKE(LOCATION, '^C\d{3}\w{1}') AND ` +
+      `      (OCCUPIED = 0 AND CAPACITY = 0 AND (CURRENT_LOT = 'INVALID' OR CURRENT_LOT IS NULL))`;
+    //Conformal y solo ubicaciones inactivas
+  } else if (estadoBuffer == "disable" && bufferType == "PABUFFER") {
+    sql =
+      `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+      `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+      `WHERE BUFFER = 'PABUFFER' AND REGEXP_LIKE(LOCATION, '^C\d{2}') AND ` +
+      `   ((OCCUPIED = 1 AND CAPACITY = 1 AND CURRENT_LOT != 'INVALID') OR ` +
+      `    (OCCUPIED = 0 AND CAPACITY = 1 AND CURRENT_LOT IS NULL))`;
+    //Cualquiera que no sea Conformal y solo las que se seleccionaron (sino todas las ubicaciones)
+  }
+
+  //Ejecutando consulta en la base de datos
+  RepmesTables.credentialResults("MESSALPROD").then((results) =>
+    RepmesTables.connectionRepmes(results, "MESSALPROD")
+      .then((results) => {
+        results.getConnection().then((oracleDbConnection) => {
+          oracleDbConnection
+            .execute(sql)
+            .then((results) => {
+              res.status(200).json(results.rows);
             })
             .catch((error) => {
               res.status(422).json({

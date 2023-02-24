@@ -22,6 +22,9 @@ router.get(
   "/availablelocators/:bufferName",
   othersController.getAvailableLocators
 );
+router.get("/batchrecipe/:batch", othersController.getBatchRecipe);
+router.get("/operator/:badge", othersController.getOperatorName);
+router.get("/locationInformation", othersController.getLocationInformation);
 
 /************************************************************/
 

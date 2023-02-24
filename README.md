@@ -100,3 +100,9 @@ Information from batches can be return from either from MES or REPMES databases.
 
 # Changes done on 02/01/2023
 - changed the batchinfo to be a standard get method, so the value search could be in the URL, instead of sending a body.
+
+
+# Changes done on 24/02/2023
+- added a new method (getLocationInformation) that search information from the buffers depending in the user input. This not substitues the other buffer related method, because this one is more general in its usage and can manage different kind of petitions. This method have two mandatory parameter: buffer and status; buffer means which of the three buffers should it search in, status mean if it should return all locations that are created or only enable/disable. A third optional parameter is the initial and final locations, this if a user wants to search for an specific range of locations, they change how the API response, like so
+
+    ![Alt text](img/image.png "pseudocode explaining how the parameter of initial and final locations affects what the API returns.")
