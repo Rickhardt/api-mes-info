@@ -103,6 +103,20 @@ Information from batches can be return from either from MES or REPMES databases.
 
 
 # Changes done on 24/02/2023
-- added a new method (getLocationInformation) that search information from the buffers depending in the user input. This not substitues the other buffer related method, because this one is more general in its usage and can manage different kind of petitions. This method have two mandatory parameter: buffer and status; buffer means which of the three buffers should it search in, status mean if it should return all locations that are created or only enable/disable. A third optional parameter is the initial and final locations, this if a user wants to search for an specific range of locations, they change how the API response, like so
+- added a new method (getLocationInformation) that search information from the buffers depending in the user input. This not substitues the other buffer related method, because this one is more general in its usage and can manage different kind of petitions. This method have two mandatory parameter: buffer and status; buffer means which of the three buffers should it search in, status mean if it should return all locations that are created or only enable/disable. A third optional parameter is the initial and final locations. If a user wants to search for an specific range of locations, they change how the API response, like so
 
-    ![Alt text](img/image.png "pseudocode explaining how the parameter of initial and final locations affects what the API returns.")
+    ![Alt text](img/peticion-GET-locations-general.PNG "pseudocode explaining how the parameter of initial and final locations affects what the API returns.")
+
+
+# Changes done on 13/03/2024
+There are so many changes since the last commit, so we will group then with the following reason:
+    - Changes to improve functionality and stability of the API.
+
+The newest addition is the method batchrecipeinfo. This method searches information about the recipe assigned to a step for a batch, it returns:
+    - PROCESSINGSTATUS.
+    - STEPNAME.
+    - PARAMETER_VALUE_STRING (or the value for that recipe).
+This method can process only 1 batch at a time. Is a GET method.
+
+We changed the response of some of the methods:
+    - The additional message sent with some of the methods (like getBatchActualPosition) is not longer sent. It was counterproductive (And, honestly, unncecessary). So now, the message is only the information returned by the query.

@@ -15,8 +15,8 @@ const mesRoutes = require("./routes/mesprod");
 const otherRoutes = require("./routes/others");
 const errorController = require("./controllers/404");
 
-const privateKey = fs.readFileSync(__dirname + "/avxslv.com.key", "utf8");
-const certificate = fs.readFileSync(__dirname + "/avxslv.com.crt", "utf8");
+/*const privateKey = fs.readFileSync(__dirname + "/avxslv.com.key", "utf8");
+const certificate = fs.readFileSync(__dirname + "/avxslv.com.crt", "utf8");*/
 
 const app = express();
 const accessLogStream = fs.createWriteStream(
@@ -61,5 +61,5 @@ app.use("/mes", mesRoutes);
 app.use(otherRoutes);
 app.use(errorController.get404);
 
-https.createServer({ key: privateKey, cert: certificate }, app).listen(2000);
-// app.listen(2000);
+//https.createServer({ key: privateKey, cert: certificate }, app).listen(2000);
+app.listen(2000);

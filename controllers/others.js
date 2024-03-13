@@ -165,9 +165,9 @@ exports.getOperatorName = (req, res, next) => {
 
   //Formando la sentencia para número desconocido de valores
   sql =
-    "SELECT NVL((FIRST_NAME || LAST_NAME), '') AS NOMBRE_OPERADOR " +
-    "FROM FW_PROD.FWCATNS_OPERATORS " +
-    "WHERE PERSONAL_ID = :v0";
+    `SELECT NVL((FIRST_NAME || LAST_NAME), '') AS "userName"
+     FROM FW_PROD.FWCATNS_OPERATORS
+     WHERE PERSONAL_ID = :v0`;
 
   //Ejecutando consulta en la base de datos
   RepmesTables.credentialResults("MESSALPROD").then((results) =>
@@ -308,8 +308,6 @@ exports.getLocationInformation = (req, res, next) => {
     finalNumberFields = req.query.finalNumberFields;
   }
 
-  console.log(req.query.initialNumberFields == null);
-
   switch (req.query.bufferType) {
     case "paBuffer":
       bufferType = "PABUFFER";
@@ -317,6 +315,9 @@ exports.getLocationInformation = (req, res, next) => {
     case "raBuffer":
       bufferType = "RABUFFER";
       break;
+      case "rnBuffer":
+        bufferType = "RNBUFFER";
+        break;
     case "cfBuffer":
       bufferType = "CFBUFFER";
       break;
@@ -338,7 +339,7 @@ exports.getLocationInformation = (req, res, next) => {
             `FROM FW_PROD.FWCATNS_LOCATIONS ` +
             `WHERE BUFFER = '` +
             bufferType +
-            `' AND REGEXP_LIKE(LOCATION, '^CF\\d{2,4}$')) WHERE ` +
+            `' AND REGEXP_LIKE(LOCATION, '^CF\\\\d{2,4}$')) WHERE ` +
             `(TO_NUMBER(SUBSTR(LOCATION, 3)) >= ` +
             parseInt(initialNumberFields[i]) +
             ` AND ` +
@@ -352,7 +353,7 @@ exports.getLocationInformation = (req, res, next) => {
             `FROM FW_PROD.FWCATNS_LOCATIONS ` +
             `WHERE BUFFER = '` +
             bufferType +
-            `' AND REGEXP_LIKE(LOCATION, '^CF\\d{2,4}$')) WHERE ` +
+            `' AND REGEXP_LIKE(LOCATION, '^CF\\\\d{2,4}$')) WHERE ` +
             `(TO_NUMBER(SUBSTR(LOCATION, 3)) >= ` +
             parseInt(initialNumberFields[i]) +
             ` AND ` +
@@ -374,7 +375,7 @@ exports.getLocationInformation = (req, res, next) => {
     sql =
       `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
       `FROM FW_PROD.FWCATNS_LOCATIONS ` +
-      `WHERE BUFFER = 'CFBUFFER' AND REGEXP_LIKE(LOCATION, '^\w{2}\d{2,4}') AND ` +
+      `WHERE BUFFER = 'CFBUFFER' AND REGEXP_LIKE(LOCATION, '^\\\w{2}\\\d{2,4}') AND ` +
       `      ((OCCUPIED = 1 AND CAPACITY = 1 AND CURRENT_LOT != 'INVALID') OR ` +
       `     (OCCUPIED = 0 AND CAPACITY = 1 AND CURRENT_LOT IS NULL))`;
     //Conformal y solo ubicaciones inactivas
@@ -382,7 +383,7 @@ exports.getLocationInformation = (req, res, next) => {
     sql =
       `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
       `FROM FW_PROD.FWCATNS_LOCATIONS ` +
-      `WHERE BUFFER = 'CFBUFFER' AND REGEXP_LIKE(LOCATION, '^\w{2}\d{2,4}') AND ` +
+      `WHERE BUFFER = 'CFBUFFER' AND REGEXP_LIKE(LOCATION, '^\\\w{2}\\\d{2,4}') AND ` +
       `      (OCCUPIED = 0 AND CAPACITY = 0 AND (CURRENT_LOT = 'INVALID' OR CURRENT_LOT IS NULL))`;
     //Cualquiera que no sea Conformal y solo las que se seleccionaron (sino todas las ubicaciones)
   } else if (estadoBuffer == "all" && bufferType == "RABUFFER") {
@@ -395,7 +396,7 @@ exports.getLocationInformation = (req, res, next) => {
             `FROM FW_PROD.FWCATNS_LOCATIONS ` +
             `WHERE BUFFER = '` +
             bufferType +
-            `' AND REGEXP_LIKE(LOCATION, '^\\w{2}\\d{3,4}\\w{1}')) WHERE ` +
+            `' AND REGEXP_LIKE(LOCATION, '\\\w{1,2}\\\d{2,4}\\\w{1}')) WHERE ` +
             `(TO_NUMBER(SUBSTR(LOCATION, 3, (LENGTH(LOCATION) - 3))) >= ` +
             parseInt(initialNumberFields[i]) +
             ` AND ` +
@@ -409,7 +410,7 @@ exports.getLocationInformation = (req, res, next) => {
             `FROM FW_PROD.FWCATNS_LOCATIONS ` +
             `WHERE BUFFER = '` +
             bufferType +
-            `' AND REGEXP_LIKE(LOCATION, '^\\w{2}\\d{3,4}\\w{1}')) WHERE ` +
+            `' AND REGEXP_LIKE(LOCATION, '\\\w{1,2}\\\d{2,4}\\\w{1}')) WHERE ` +
             `(TO_NUMBER(SUBSTR(LOCATION, 3, (LENGTH(LOCATION) - 3))) >= ` +
             parseInt(initialNumberFields[i]) +
             ` AND ` +
@@ -431,17 +432,73 @@ exports.getLocationInformation = (req, res, next) => {
     sql =
       `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
       ` FROM FW_PROD.FWCATNS_LOCATIONS ` +
-      ` WHERE BUFFER = 'RABUFFER' AND REGEXP_LIKE(LOCATION, '^\w{2}\d{3,4}\w{1}') AND ` +
-      `      (OCCUPIED = 0 AND CAPACITY = 0 AND (CURRENT_LOT = 'INVALID' OR CURRENT_LOT IS NULL))`;
+      ` WHERE BUFFER = 'RABUFFER' AND REGEXP_LIKE(LOCATION, '\\\w{1,2}\\\d{2,4}\\\w{1}') AND ` +
+      `       (OCCUPIED = 0 AND CAPACITY = 1 AND CURRENT_LOT IS NULL)`;
     //Conformal y solo ubicaciones inactivas
   } else if (estadoBuffer == "disable" && bufferType == "RABUFFER") {
     sql =
       `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
       `FROM FW_PROD.FWCATNS_LOCATIONS ` +
-      `WHERE BUFFER = 'RABUFFER' AND REGEXP_LIKE(LOCATION, '^\w{2}\d{2,4}') AND ` +
+      `WHERE BUFFER = 'RABUFFER' AND REGEXP_LIKE(LOCATION, '\\\w{1,2}\\\d{2,4}\\\w{1}') AND ` +
+      `      (OCCUPIED = 0 AND CAPACITY = 0 AND CURRENT_LOT = 'INVALID')`;
+    //Cualquiera que no sea Conformal y solo las que se seleccionaron (sino todas las ubicaciones)
+  } else if (estadoBuffer == "all" && bufferType == "RNBUFFER") {
+    if (initialNumberFieldsSet && finalNumberFieldsSet) {
+      for (i = 0; i < initialNumberFields.length; i++) {
+        if (i == initialNumberFields.length - 1) {
+          sql =
+            sql +
+            `SELECT * FROM (SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+            `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+            `WHERE BUFFER = '` +
+            bufferType +
+            `' AND REGEXP_LIKE(LOCATION, '\\\w{1,2}\\\d{2,4}\\\w{1}')) WHERE ` +
+            `(TO_NUMBER(SUBSTR(LOCATION, 3, (LENGTH(LOCATION) - 3))) >= ` +
+            parseInt(initialNumberFields[i]) +
+            ` AND ` +
+            `TO_NUMBER(SUBSTR(LOCATION, 3, (LENGTH(LOCATION) - 3))) <= ` +
+            parseInt(finalNumberFields[i]) +
+            `)`;
+        } else {
+          sql =
+            sql +
+            `SELECT * FROM (SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+            `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+            `WHERE BUFFER = '` +
+            bufferType +
+            `' AND REGEXP_LIKE(LOCATION, '^\\\\w{2}\\\\d{3,4}\\\\w{1}')) WHERE ` +
+            `(TO_NUMBER(SUBSTR(LOCATION, 3, (LENGTH(LOCATION) - 3))) >= ` +
+            parseInt(initialNumberFields[i]) +
+            ` AND ` +
+            `TO_NUMBER(SUBSTR(LOCATION, 3, (LENGTH(LOCATION) - 3))) <= ` +
+            parseInt(finalNumberFields[i]) +
+            `) UNION `;
+        }
+      }
+    } else {
+      sql =
+        `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+        `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+        `WHERE BUFFER = '` +
+        bufferType +
+        `'`;
+    }
+    //RNBUFFER y solo ubicaciones activas
+  } else if (estadoBuffer == "available" && bufferType == "RNBUFFER") {
+    sql =
+      `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+      ` FROM FW_PROD.FWCATNS_LOCATIONS ` +
+      ` WHERE BUFFER = 'RNBUFFER' AND REGEXP_LIKE(LOCATION, '\\\w{1,2}\\\d{2,4}\\\w{1}') AND ` +
+      `      (OCCUPIED = 0 AND CAPACITY = 0 AND (CURRENT_LOT = 'INVALID' OR CURRENT_LOT IS NULL))`;
+    //RNBUFFER y solo ubicaciones inactivas
+  } else if (estadoBuffer == "disable" && bufferType == "RNBUFFER") {
+    sql =
+      `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
+      `FROM FW_PROD.FWCATNS_LOCATIONS ` +
+      `WHERE BUFFER = 'RNBUFFER' AND REGEXP_LIKE(LOCATION, '\\\w{1,2}\\\d{2,4}\\\w{1}') AND ` +
       `   ((OCCUPIED = 1 AND CAPACITY = 1 AND CURRENT_LOT != 'INVALID') OR ` +
       `    (OCCUPIED = 0 AND CAPACITY = 1 AND CURRENT_LOT IS NULL))`;
-    //Cualquiera que no sea Conformal y solo las que se seleccionaron (sino todas las ubicaciones)
+    //Cualquiera que no sea RNBUFFER y solo las que se seleccionaron (sino todas las ubicaciones)
   } else if (estadoBuffer == "all" && bufferType == "PABUFFER") {
     if (initialNumberFieldsSet && finalNumberFieldsSet) {
       for (i = 0; i < initialNumberFields.length; i++) {
@@ -452,7 +509,7 @@ exports.getLocationInformation = (req, res, next) => {
             `FROM FW_PROD.FWCATNS_LOCATIONS ` +
             `WHERE BUFFER = '` +
             bufferType +
-            `' AND REGEXP_LIKE(LOCATION, '^C\\d{3}\\w{1}')) WHERE ` +
+            `' AND REGEXP_LIKE(LOCATION, '^C\\\\d{3}\\\\w{1}')) WHERE ` +
             `(TO_NUMBER(SUBSTR(LOCATION, 2, 3)) >= ` +
             parseInt(initialNumberFields[i]) +
             ` AND ` +
@@ -466,7 +523,7 @@ exports.getLocationInformation = (req, res, next) => {
             `FROM FW_PROD.FWCATNS_LOCATIONS ` +
             `WHERE BUFFER = '` +
             bufferType +
-            `' AND REGEXP_LIKE(LOCATION, '^C\\d{3}\\w{1}')) WHERE ` +
+            `' AND REGEXP_LIKE(LOCATION, '^C\\\\d{3}\\\\w{1}')) WHERE ` +
             `(TO_NUMBER(SUBSTR(LOCATION, 2, 3)) >= ` +
             parseInt(initialNumberFields[i]) +
             ` AND ` +
@@ -488,18 +545,20 @@ exports.getLocationInformation = (req, res, next) => {
     sql =
       `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
       ` FROM FW_PROD.FWCATNS_LOCATIONS ` +
-      ` WHERE BUFFER = 'PABUFFER' AND REGEXP_LIKE(LOCATION, '^C\d{3}\w{1}') AND ` +
+      ` WHERE BUFFER = 'PABUFFER' AND REGEXP_LIKE(LOCATION, '^C\\\d{2,4}\\\w{1}') AND ` +
       `      (OCCUPIED = 0 AND CAPACITY = 0 AND (CURRENT_LOT = 'INVALID' OR CURRENT_LOT IS NULL))`;
     //Conformal y solo ubicaciones inactivas
   } else if (estadoBuffer == "disable" && bufferType == "PABUFFER") {
     sql =
       `SELECT BUFFER, LOCATION, CURRENT_LOT, OCCUPIED, CAPACITY, USERID, TIMEOFCHANGE ` +
       `FROM FW_PROD.FWCATNS_LOCATIONS ` +
-      `WHERE BUFFER = 'PABUFFER' AND REGEXP_LIKE(LOCATION, '^C\d{2}') AND ` +
+      `WHERE BUFFER = 'PABUFFER' AND REGEXP_LIKE(LOCATION, '^C\\\d{2,4}') AND ` +
       `   ((OCCUPIED = 1 AND CAPACITY = 1 AND CURRENT_LOT != 'INVALID') OR ` +
       `    (OCCUPIED = 0 AND CAPACITY = 1 AND CURRENT_LOT IS NULL))`;
     //Cualquiera que no sea Conformal y solo las que se seleccionaron (sino todas las ubicaciones)
   }
+
+  console.log(sql);
 
   //Ejecutando consulta en la base de datos
   RepmesTables.credentialResults("MESSALPROD").then((results) =>
@@ -521,8 +580,8 @@ exports.getLocationInformation = (req, res, next) => {
       })
       .catch((error) => {
         res.status(422).json({
-          MENSAJE: error.message,
-          ERRORES: error.array(),
+          MENSAJE: error.code,
+          ERRORES: error.message,
         });
       })
   );
@@ -752,6 +811,7 @@ exports.putUpdateLocators = (req, res, next) => {
   occupied = [];
   capacity = [];
   batch = [];
+  bufferType = "";
 
   switch (Object.keys(req.body).length) {
     case 0:
@@ -775,6 +835,8 @@ exports.putUpdateLocators = (req, res, next) => {
           batch.push(req.body[element]["BATCH"]);
         }
       });
+
+      bufferType = req.body[0]["BUFFER"];
       break;
   }
 
@@ -804,7 +866,7 @@ exports.putUpdateLocators = (req, res, next) => {
               }
 
               if (results.rows[0]["NICKNAME"] === null) {
-                commitingUser = results.rows[0]["USERNAME"];
+                commitingUser = user;
               } else {
                 commitingUser = results.rows[0]["NICKNAME"];
               }
@@ -813,7 +875,7 @@ exports.putUpdateLocators = (req, res, next) => {
               sql =
                 "UPDATE FW_PROD.FWCATNS_LOCATIONS " +
                 "SET CURRENT_LOT = :v1, OCCUPIED = :v2, CAPACITY = :v3, USERID = :v4, TIMEOFCHANGE = :v5 " +
-                "WHERE LOCATION = :v6";
+                "WHERE LOCATION = :v6 AND BUFFER = '" + bufferType + "'";
 
               for (let index = 0; index < locator.length - 1; index++) {
                 //Valores a insertar en tabla
@@ -876,8 +938,8 @@ exports.putUpdateLocators = (req, res, next) => {
       })
       .catch((error) => {
         res.status(422).json({
-          MENSAJE: error.message,
-          ERRORES: error.array(),
+          MENSAJE: error.code,
+          ERRORES: error.message,
         });
       })
   );

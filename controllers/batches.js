@@ -71,7 +71,7 @@ exports.getBatchInfo = (req, res, next) => {
         oracleDbConnection
           .execute(sql, batch)
           .then((results) => {
-            results.rows.push(responseToSend);
+            //results.rows.push(responseToSend);
             res.status(200).json(results.rows);
           })
           .catch((error) => {
@@ -469,7 +469,7 @@ exports.getBatchActualPosition = (req, res, next) => {
           oracleDbConnection
             .execute(sql, batch)
             .then((results) => {
-              results.rows.push(responseToSend);
+              //results.rows.push(responseToSend);
               res.status(200).json(results.rows);
             })
             .catch((error) => {
@@ -495,15 +495,15 @@ exports.getBatchActualPosition = (req, res, next) => {
  *        - Producto (o "nuevo" número de parte)
  *        - Estado del lote en MES
  *        - PlanName
- *         - Cantidad de unidades al ingresar al paso
- *         - Lote originador
- *         - Producto del lote originador
- *         - Paso actual
- *         - Handle
- *         - Máquina en la que se ha cargado (si se ha cargado a una, en otro caso muestra NULL)
- *         - Esto de la regla actual
- *         - Nombre de la regla que se está ejecutando o que se va a ejecutar (ya sea por intervención de usuario o no)
- *         - Cuando ingreso al paso
+ *        - Cantidad de unidades al ingresar al paso
+ *        - Lote originador
+ *        - Producto del lote originador
+ *        - Paso actual
+ *        - Handle
+ *        - Máquina en la que se ha cargado (si se ha cargado a una, en otro caso muestra NULL)
+ *        - Esto de la regla actual
+ *        - Nombre de la regla que se está ejecutando o que se va a ejecutar (ya sea por intervención de usuario o no)
+ *        - Cuando ingreso al paso
  *Extraído de MES*/
 exports.getBatchActualPositionSingle = (req, res, next) => {
   const errors = validationResult(req);
@@ -532,8 +532,9 @@ exports.getBatchActualPositionSingle = (req, res, next) => {
                INNER JOIN FW_PROD.FWPRPATTRIBUTEINSTANCE F ON F.SYSID = D.TOID
                INNER JOIN FW_PROD.FWPRPATTRIBUTE G ON G.SYSID = F.ATTRCLASS
                WHERE C.REVSTATE = 'Active' AND D.KEYDATA = 'Product_CrossRef_ID')
-         SELECT A.APPID, C.PROCESSINGSTATE, A.PRODUCTNAME, G.MAGNITUDE AS OLD_PART_TYPE, A.PLANNAME, A.COMPONENTQTY,
-              A.VENDORLOTID, A.VENDORID, C.STEPNAME, C.HANDLE, C.LOCATION, F.RULENAME, C.TIMEHERESINCE
+         SELECT A.AppID "AppID", C.ProcessingState "ProcessingState", A.ProductName "ProductName", G.MAGNITUDE AS "OldPartType",
+                A.PlanName "PlanName", A.ComponentQty "ComponentQty", A.VendorLotId "VendorLotId", A.VendorId "VendorId", C.StepName "StepName",
+                C.Handle "Handle", C.Location "Location", F.RuleName "RuleName", C.TimeHereSince "TimeHereSince"
          FROM FW_PROD.FWLOT A
          INNER JOIN FW_PROD.FWLOT_N2M B ON B.FROMID = A.SYSID
          INNER JOIN FW_PROD.FWWIPSTEP C ON C.SYSID = B.TOID
@@ -550,7 +551,7 @@ exports.getBatchActualPositionSingle = (req, res, next) => {
           oracleDbConnection
             .execute(sql, [batch])
             .then((results) => {
-              results.rows.push(responseToSend);
+              //results.rows.push(responseToSend);
               res.status(200).json(results.rows);
             })
             .catch((error) => {
@@ -664,5 +665,158 @@ exports.getBatchTestResults = (req, res, next) => {
           });
       });
     })
+  );
+};
+
+/*Cuenta por cuántos paso ha sido procesado el lote hasta el momento de la consulta. Esto se ocupa al hacer el trackIn, pero podría resultar útil
+ *en otras aplicaciones
+ *Extraído de MES*/
+exports.getBatchStepCount = (req, res, next) => {
+  const errors = validationResult(req);
+  sql = "";
+
+  if (!errors.isEmpty()) {
+    return res.json({
+      ERRORES: errors.array(),
+    });
+  }
+
+  const batch = req.params.batchName;
+
+  //Formando la sentencia para número desconocido de valores
+  sql = `SELECT COUNT(STEPID) AS "StepCount"
+         FROM
+         (SELECT DISTINCT A.WIPID, C.STEPID
+         FROM FW_PROD.FWWIPHISTORY A
+         INNER JOIN FW_PROD.FWWIPHISTORY_N2M B ON B.FROMID = A.SYSID
+         INNER JOIN FW_PROD.FWWIPSTEPHISTORY C ON C.SYSID = B.TOID
+         WHERE A.WIPID = :v0 AND C.PROCESSINGSTATUS = 'WaitingForDispatch' AND a.LASTSTEPID IS NOT NULL)`;
+
+  //Ejecutando consulta en la base de datos
+  RepmesTables.credentialResults("MESSALPROD").then((results) =>
+    RepmesTables.connectionRepmes(results, "MESSALPROD")
+      .then((results) => {
+        results.getConnection().then((oracleDbConnection) => {
+          oracleDbConnection
+            .execute(sql, [batch])
+            .then((results) => {
+              res.status(200).json(results.rows);
+            })
+            .catch((error) => {
+              res.status(422).json({
+                MENSAJE: error.message,
+                ERRORES: error,
+              });
+            });
+        });
+      })
+      .catch((error) => {
+        res.status(422).json({
+          MENSAJE: error.message,
+          ERRORES: error.array(),
+        });
+      })
+  );
+};
+
+/*Retorna el paso actual del lote y la sequence de las reglas a ejecutar. Por ejemplo, 0 o 1
+ *Extraído de MES
+ */
+ exports.getBatchRuleSequence = (req, res, next) => {
+  const errors = validationResult(req);
+  sql = "";
+
+  if (!errors.isEmpty()) {
+    return res.json({
+      ERRORES: errors.array(),
+    });
+  }
+
+  const batch = req.params.batchName;
+
+  //Formando la sentencia para número desconocido de valores
+  sql = `SELECT C.STEPNAME "StepName", C.CURRENTRULEINDEX "SequenceActual"
+         FROM FW_PROD.FWLOT A
+         INNER JOIN FW_PROD.FWLOT_N2M B ON B.FROMID = A.SYSID
+         INNER JOIN FW_PROD.FWWIPSTEP C ON C.SYSID = B.TOID
+         WHERE A.PROCESSINGSTATUS = 'Active' AND A.APPID = :v0`;
+
+  //Ejecutando consulta en la base de datos
+  RepmesTables.credentialResults("MESSALPROD").then((results) =>
+    RepmesTables.connectionRepmes(results, "MESSALPROD")
+      .then((results) => {
+        results.getConnection().then((oracleDbConnection) => {
+          oracleDbConnection
+            .execute(sql, [batch])
+            .then((results) => {
+              res.status(200).json(results.rows);
+            })
+            .catch((error) => {
+              res.status(422).json({
+                MENSAJE: error.message,
+                ERRORES: error,
+              });
+            });
+        });
+      })
+      .catch((error) => {
+        res.status(422).json({
+          MENSAJE: error.message,
+          ERRORES: error.array(),
+        });
+      })
+  );
+};
+
+/*Información de receta según el paso actual del lote
+ *Retorna:
+ *        - Estado actual del lote (PROCESSINGSTATUS): Active, Hold, Inventory, etc.
+ *        - Paso actual del lote (STEPNAME).
+ *        - Valor de la receta para el paso (PARAMETER_VALUE_STRING). Lo que significa dependerá de la receta.
+ *Extraído de MES*/
+ exports.getBatchRecipeInfo = (req, res, next) => {
+  const errors = validationResult(req);
+  sql = "";
+
+  if (!errors.isEmpty()) {
+    return res.json({
+      ERRORES: errors.array(),
+    });
+  }
+
+  const batch = req.params.batchName;
+
+  sql = `SELECT A.PROCESSINGSTATUS, D.STEPNAME, TO_NUMBER(E.PARAMETER_VALUE_STRING) AS RECIPEVALUE
+         FROM FW_PROD.FWLOT A
+         INNER JOIN FW_PROD.FWLOT_PN2M B ON B.FROMID = A.SYSID
+         INNER JOIN FW_PROD.FWLOT_N2M C ON C.FROMID = A.SYSID
+         INNER JOIN FW_PROD.FWWIPSTEP D ON D.SYSID = C.TOID
+         INNER JOIN FW_PROD.FWCATNS_PROCESS_RECIPES E ON E.STEP_NAME = D.STEPNAME AND E.RECIPE_NAME = B.VALDATA
+         WHERE E.STATE = 'Active' AND A.APPID = :v0`;
+
+  //Ejecutando consulta en la base de datos
+  RepmesTables.credentialResults("MESSALPROD").then((results) =>
+    RepmesTables.connectionRepmes(results, "MESSALPROD")
+      .then((results) => {
+        results.getConnection().then((oracleDbConnection) => {
+          oracleDbConnection
+            .execute(sql, [batch])
+            .then((results) => {
+              res.status(200).json(results.rows);
+            })
+            .catch((error) => {
+              res.status(422).json({
+                MENSAJE: error.message,
+                ERRORES: error,
+              });
+            });
+        });
+      })
+      .catch((error) => {
+        res.status(422).json({
+          MENSAJE: error.message,
+          ERRORES: error.array(),
+        });
+      })
   );
 };

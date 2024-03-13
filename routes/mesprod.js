@@ -6,6 +6,7 @@ const { body } = require("express-validator");
 const batchesController = require("../controllers/batches");
 const productController = require("../controllers/product");
 const equipmentController = require("../controllers/equipment");
+const stepController = require("../controllers/step");
 
 const router = express.Router();
 
@@ -16,117 +17,9 @@ const productQueriesKeys = ["PRODUCTO"];
 const batchQueriesKeys = ["BATCH"];
 const eqpQueriesKeys = ["EQUIPO"];
 
-/*router.get(
-  "/batchinfo",
-  [
-    body()
-      .custom((body, { req }) => {
-        contadorMalas = 0;
-
-        Object.keys(req.body).forEach((element) => {
-          if (
-            !Object.keys(req.body[element]).every((key) => {
-              return batchQueriesKeys.includes(key);
-            })
-          ) {
-            contadorMalas++;
-          }
-        });
-
-        if (contadorMalas > 0) {
-          return false;
-        } else {
-          return true;
-        }
-      })
-      .withMessage(
-        "Se ha omitido, o se ha agregado de más, un parámetro en el cuerpo de la petición"
-      ),
-
-    body()
-      .custom((body, { req }) => {
-        let specialCharactersRegEx = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?']/;
-
-        contadorMalas = 0;
-
-        Object.keys(req.body).forEach((element) => {
-          if (
-            req.body[element]["BATCH"].match(specialCharactersRegEx) != null
-          ) {
-            contadorMalas++;
-          }
-        });
-
-        if (contadorMalas > 0) {
-          return false;
-        } else {
-          return true;
-        }
-      })
-      .withMessage(
-        "Algunos de los miembros del cuerpo de la petición posee caracteres no válidos"
-      ),
-  ],
-  batchesController.getBatchActualPosition
-);*/
-
 router.get(
   "/batchinfo/:batchName",
   batchesController.getBatchActualPositionSingle
-);
-
-router.post(
-  "/batchinfo",
-  [
-    body()
-      .custom((body, { req }) => {
-        contadorMalas = 0;
-
-        Object.keys(req.body).forEach((element) => {
-          if (
-            !Object.keys(req.body[element]).every((key) => {
-              return batchQueriesKeys.includes(key);
-            })
-          ) {
-            contadorMalas++;
-          }
-        });
-
-        if (contadorMalas > 0) {
-          return false;
-        } else {
-          return true;
-        }
-      })
-      .withMessage(
-        "Se ha omitido, o se ha agregado de más, un parámetro en el cuerpo de la petición"
-      ),
-
-    body()
-      .custom((body, { req }) => {
-        let specialCharactersRegEx = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?']/;
-
-        contadorMalas = 0;
-
-        Object.keys(req.body).forEach((element) => {
-          if (
-            req.body[element]["BATCH"].match(specialCharactersRegEx) != null
-          ) {
-            contadorMalas++;
-          }
-        });
-
-        if (contadorMalas > 0) {
-          return false;
-        } else {
-          return true;
-        }
-      })
-      .withMessage(
-        "Algunos de los miembros del cuerpo de la petición posee caracteres no válidos"
-      ),
-  ],
-  batchesController.getBatchActualPosition
 );
 
 router.get(
@@ -287,6 +180,73 @@ router.get(
       ),
   ],
   productController.getProductAttributes
+);
+
+router.get("/batchstepcount/:batchName", batchesController.getBatchStepCount);
+
+router.get("/batchrulesquence/:batchName", batchesController.getBatchRuleSequence);
+
+router.get("/steprulecount/:stepname", stepController.getStepRuleCount);
+
+router.get(
+  "/batchrecipeinfo/:batchName",
+  batchesController.getBatchRecipeInfo
+);
+
+/****************************************************************************************************/
+
+router.post(
+  "/batchinfo",
+  [
+    body()
+      .custom((body, { req }) => {
+        contadorMalas = 0;
+
+        Object.keys(req.body).forEach((element) => {
+          if (
+            !Object.keys(req.body[element]).every((key) => {
+              return batchQueriesKeys.includes(key);
+            })
+          ) {
+            contadorMalas++;
+          }
+        });
+
+        if (contadorMalas > 0) {
+          return false;
+        } else {
+          return true;
+        }
+      })
+      .withMessage(
+        "Se ha omitido, o se ha agregado de más, un parámetro en el cuerpo de la petición"
+      ),
+
+    body()
+      .custom((body, { req }) => {
+        let specialCharactersRegEx = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?']/;
+
+        contadorMalas = 0;
+
+        Object.keys(req.body).forEach((element) => {
+          if (
+            req.body[element]["BATCH"].match(specialCharactersRegEx) != null
+          ) {
+            contadorMalas++;
+          }
+        });
+
+        if (contadorMalas > 0) {
+          return false;
+        } else {
+          return true;
+        }
+      })
+      .withMessage(
+        "Algunos de los miembros del cuerpo de la petición posee caracteres no válidos"
+      ),
+  ],
+  batchesController.getBatchActualPosition
 );
 
 module.exports = router;

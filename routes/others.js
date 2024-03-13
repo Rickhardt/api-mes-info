@@ -11,7 +11,7 @@ const router = express.Router();
 let contadorMalas;
 let contador;
 const locatorKeys = ["LOCATOR", "BUFFER"];
-const updateLocatorKeys = ["LOCATOR", "BATCH", "OCCUPIED", "CAPACITY"];
+const updateLocatorKeys = ["LOCATOR", "BUFFER", "BATCH", "OCCUPIED", "CAPACITY"];
 const userKeys = ["USER"];
 
 router.get("/", apiInfoController.getIndex);
